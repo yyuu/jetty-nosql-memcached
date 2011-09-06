@@ -290,7 +290,6 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 	 * and avoid loading to client side.
 	 */
 	public long getSessionStoreCount() {
-		// TODO: count all sessions.
 		return ((MemcachedSessionIdManager)_sessionIdManager).getSessions().size();
 	}
 }

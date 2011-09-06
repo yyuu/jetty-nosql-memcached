@@ -37,12 +37,15 @@ import javax.servlet.http.HttpSession;
 import net.spy.memcached.AddrUtil;
 import net.spy.memcached.MemcachedClient;
 
+import org.eclipse.jetty.nosql.NoSqlSession;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.SessionManager;
 import org.eclipse.jetty.server.handler.ContextHandler;
+import org.eclipse.jetty.server.session.AbstractSession;
 import org.eclipse.jetty.server.session.AbstractSessionIdManager;
 import org.eclipse.jetty.server.session.SessionHandler;
+import org.eclipse.jetty.util.ConcurrentHashSet;
 import org.eclipse.jetty.util.log.Log;
 import org.eclipse.jetty.util.log.Logger;
 
@@ -103,8 +106,8 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	 * 
 	 * TODO consider if this ought to be concurrent or not
 	 */
-	// protected final Set<String> _sessionsIds = new HashSet<String>();
-	protected final Map<String, MemcachedSessionData> _sessions = new ConcurrentHashMap<String, MemcachedSessionData>();
+	protected final Map<String, Long> _sessions = new ConcurrentHashMap<String, Long>();
+	protected final Map<String, Long> _invalidatedSessions = new ConcurrentHashMap<String, Long>();
 
 	private String _memcachedServerString = "127.0.0.1:11211";
 	private int _memcachedDefaultExpiry = 0; // never expire
@@ -131,28 +134,29 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	 * point of expiration.
 	 */
 	protected void scavenge() {
-		__log.debug("SessionIdManager:scavenge:called with delay"
-				+ _scavengeDelay);
+		__log.debug("SessionIdManager:scavenge:called with delay" + _scavengeDelay);
 
-		synchronized (_sessions) {
-			/*
-			 * run a query returning results that: - are in the known list of
-			 * sessionIds - have an accessed time less then current time - the
-			 * scavenger period
-			 * 
-			 * we limit the query to return just the __ID so we are not sucking
-			 * back full sessions
-			 */
+		/*
+		 * run a query returning results that: - are in the known list of
+		 * sessionIds - have an accessed time less then current time - the
+		 * scavenger period
+		 * 
+		 * we limit the query to return just the __ID so we are not sucking back
+		 * full sessions
+		 */
 
-			long threshold = System.currentTimeMillis() - _scavengeDelay;
-			for (String id : _sessions.keySet()) {
-				MemcachedSessionData data = _sessions.get(id);
+		long threshold = System.currentTimeMillis() - _scavengeDelay;
+		for (String id : _sessions.keySet()) {
+			// check target from local cache.
+			Long accessed = _sessions.get(id);
+			if (accessed != null && accessed < threshold) {
+				// check latest data.
+				MemcachedSessionData data = memcachedGet(id);
 				if (data != null && data.getAccessedTime() < threshold) {
 					invalidateAll(id);
 				}
 			}
 		}
-
 	}
 
 	/* ------------------------------------------------------------ */
@@ -191,7 +195,22 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	 * 'valid=false'
 	 */
 	protected void purge() {
-		__log.debug("MemcachedSessionIdManager:purge: *NOT IMPLEMENTED*");
+		long threshold = System.currentTimeMillis() - _purgeInvalidAge;
+		for (String id : _invalidatedSessions.keySet()) {
+			// check target from local cache.
+			Long invalidated = _invalidatedSessions.get(id);
+			if (invalidated != null && invalidated < threshold) {
+				// check latest data.
+				MemcachedSessionData data = memcachedGet(id);
+				if (data != null && data.isInvalid()
+						&& data.getInvalidated() < threshold) {
+					__log.debug("MemcachedSessionIdManager:purging invalid "
+							+ id);
+					memcachedDelete(id);
+					_invalidatedSessions.remove(id);
+				}
+			}
+		}
 	}
 
 	/* ------------------------------------------------------------ */
@@ -201,8 +220,11 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	 * 
 	 */
 	protected void purgeFully() {
-		__log.debug("MemcachedSessionIdManager:purgeFully: *NOT IMPLEMENTED*");
-
+		for (String id : _invalidatedSessions.keySet()) {
+			__log.debug("MemcachedSessionIdManager:purging invalid " + id);
+			memcachedDelete(id);
+			_invalidatedSessions.remove(id);
+		}
 	}
 
 	/* ------------------------------------------------------------ */
@@ -369,10 +391,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 
 		__log.debug("MemcachedSessionIdManager:addSession:" + session.getId());
 
-		synchronized (_sessions) {
-			// _sessionsIds.add(session.getId());
-		}
-
+		_sessions.put(session.getId(), ((AbstractSession)session).getAccessed());
 	}
 
 	/* ------------------------------------------------------------ */
@@ -381,34 +400,32 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 			return;
 		}
 
-		synchronized (_sessions) {
-			_sessions.remove(session.getId());
-		}
+		_sessions.remove(session.getId());
 	}
 
 	/* ------------------------------------------------------------ */
 	public void invalidateAll(String sessionId) {
-		synchronized (_sessions) {
 			_sessions.remove(sessionId);
 
-			// tell all contexts that may have a session object with this id to
-			// get rid of them
-			Handler[] contexts = _server
-					.getChildHandlersByClass(ContextHandler.class);
-			for (int i = 0; contexts != null && i < contexts.length; i++) {
-				SessionHandler sessionHandler = (SessionHandler) ((ContextHandler) contexts[i])
-						.getChildHandlerByClass(SessionHandler.class);
-				if (sessionHandler != null) {
-					SessionManager manager = sessionHandler.getSessionManager();
+		// tell all contexts that may have a session object with this id to
+		// get rid of them
+		Handler[] contexts = _server
+				.getChildHandlersByClass(ContextHandler.class);
+		for (int i = 0; contexts != null && i < contexts.length; i++) {
+			SessionHandler sessionHandler = (SessionHandler) ((ContextHandler) contexts[i])
+					.getChildHandlerByClass(SessionHandler.class);
+			if (sessionHandler != null) {
+				SessionManager manager = sessionHandler.getSessionManager();
 
-					if (manager != null
-							&& manager instanceof MemcachedSessionManager) {
-						((MemcachedSessionManager) manager)
-								.invalidateSession(sessionId);
-					}
+				if (manager != null
+						&& manager instanceof MemcachedSessionManager) {
+					((MemcachedSessionManager) manager)
+							.invalidateSession(sessionId);
 				}
 			}
 		}
+
+		_invalidatedSessions.put(sessionId, System.currentTimeMillis());
 	}
 
 	/* ------------------------------------------------------------ */
@@ -480,14 +497,10 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 		return result;
 	}
 	
-	protected Set<String> getSessionIds() {
+	protected Set<String> getSessions() {
 		return _sessions.keySet();
 	}
 	
-	protected Map<String, MemcachedSessionData> getSessions() {
-		return Collections.unmodifiableMap(_sessions);
-	}
-
 	public String getMemcachedServerString() {
 		return _memcachedServerString;
 	}
