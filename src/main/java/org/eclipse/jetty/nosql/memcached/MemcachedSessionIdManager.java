@@ -354,7 +354,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	 * is the session id known to mongo, and is it valid
 	 */
 	public boolean idInUse(String idInCluster) {
-		return memcachedAdd(idInCluster, new MemcachedSessionData(idInCluster));
+		return ! memcachedAdd(idInCluster, new MemcachedSessionData(idInCluster));
 	}
 
 	/* ------------------------------------------------------------ */
