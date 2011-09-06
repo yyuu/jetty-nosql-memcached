@@ -83,10 +83,12 @@ public class MemcachedTestServer extends AbstractTestServer
         try
         {
             System.err.println("MemcachedTestServer:SessionIdManager:" + _maxInactivePeriod + "/" + _scavengePeriod);
-            _idManager = new MemcachedSessionIdManager(_server);
+            _idManager = new MemcachedSessionIdManager(_server, "127.0.0.1:11211");
             
             _idManager.setScavengeDelay((int)TimeUnit.SECONDS.toMillis(_scavengePeriod));
-            _idManager.setScavengePeriod(_maxInactivePeriod);                  
+            _idManager.setScavengePeriod(_maxInactivePeriod);
+            _idManager.setMemcachedDefaultExpiry(300);
+            _idManager.setMemcachedKeyPrefix("MemcachedTestServer::");
             
             return _idManager;
         }

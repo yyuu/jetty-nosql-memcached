@@ -460,8 +460,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 		boolean result = false;
 		byte[] raw = MemcachedSessionData.pack(obj);
 		try {
-			Future<Boolean> f = getConnection().set(memcachedKey(idInCluster),
-					_memcachedDefaultExpiry, raw);
+			Future<Boolean> f = getConnection().set(memcachedKey(idInCluster), _memcachedDefaultExpiry, raw);
 			result = f.get(_memcachedTimeoutInMs, TimeUnit.MILLISECONDS);
 		} catch (Exception error) {
 			// TODO: log
