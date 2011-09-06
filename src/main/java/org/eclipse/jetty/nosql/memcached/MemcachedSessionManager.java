@@ -51,22 +51,14 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 			.getLogger("org.eclipse.jetty.server.session");
 	private static final Logger LOG = __log;
 
-	private String _memcachedServerString = "127.0.0.1:11211";
-	private int _memcachedDefaultExpiry = 0; // never expire
-	private int _memcachedTimeoutInMs = 1000;
-	private String _memcachedKeyPrefix = "";
-	private String _memcachedKeySuffix = "";
 	/**
 	 * the context id is only set when this class has been started
 	 */
 	private String _contextId = null;
 
-	private MemcachedClient _sessions;
-
 	/* ------------------------------------------------------------ */
-	public MemcachedSessionManager() throws UnknownHostException,
-			RuntimeException {
-
+	public MemcachedSessionManager() {
+		super();
 	}
 
 	/*------------------------------------------------------------ */
@@ -83,12 +75,10 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 	 * org.eclipse.jetty.server.session.AbstractSessionManager#setSessionIdManager
 	 * (org.eclipse.jetty.server.SessionIdManager)
 	 */
-	@Override
-	public void setSessionIdManager(SessionIdManager metaManager) {
-		MemcachedSessionIdManager msim = (MemcachedSessionIdManager) metaManager;
-		_sessions = msim.getSessions();
-		super.setSessionIdManager(metaManager);
-	}
+//	@Override
+//	public void setSessionIdManager(SessionIdManager idManager) {
+//		super.setSessionIdManager(idManager);
+//	}
 
 	/* ------------------------------------------------------------ */
 	@Override
@@ -115,7 +105,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 				data.setInvalidated(System.currentTimeMillis());
 			}
 
-			set(session.getId(), data);
+			((MemcachedSessionIdManager) _sessionIdManager).memcachedSet(session.getId(), data);
 			__log.debug("MemcachedSessionManager:save:db.sessions.update("
 					+ session.getId() + "," + data + ")");
 
@@ -136,7 +126,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 
 		// check if our in memory version is the same as what is on the disk
 		if (version != null) {
-			MemcachedSessionData data = get(session.getClusterId());
+			MemcachedSessionData data = ((MemcachedSessionIdManager) _sessionIdManager).memcachedGet(session.getClusterId());
 			long saved = 0;
 			if (data != null) {
 				saved = data.getVersion();
@@ -150,7 +140,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 		}
 
 		// If we are here, we have to load the object
-		MemcachedSessionData data = (MemcachedSessionData) get(session
+		MemcachedSessionData data = ((MemcachedSessionIdManager) _sessionIdManager).memcachedGet(session
 				.getClusterId());
 
 		// If it doesn't exist, invalidate
@@ -195,7 +185,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 	/*------------------------------------------------------------ */
 	@Override
 	protected synchronized NoSqlSession loadSession(String clusterId) {
-		MemcachedSessionData data = (MemcachedSessionData) get(clusterId);
+		MemcachedSessionData data = ((MemcachedSessionIdManager) _sessionIdManager).memcachedGet(clusterId);
 
 		__log.debug("MemcachedSessionManager:loaded " + data);
 
@@ -248,7 +238,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 		 * Check if the session exists and if it does remove the context
 		 * associated with this session
 		 */
-		return delete(session.getClusterId());
+		return ((MemcachedSessionIdManager) _sessionIdManager).memcachedDelete(session.getClusterId());
 	}
 
 	/*------------------------------------------------------------ */
@@ -263,81 +253,17 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 		 * pull back the 'valid' value, we can check if its false, if is we
 		 * don't need to reset it to false
 		 */
-		MemcachedSessionData data = (MemcachedSessionData) get(idInCluster);
+		MemcachedSessionData data = ((MemcachedSessionIdManager) _sessionIdManager).memcachedGet(idInCluster);
 
 		if (data != null && !data.isInvalid()) {
 			data.setInvalid(true);
 			data.setInvalidated(System.currentTimeMillis());
-			set(idInCluster, data);
+			((MemcachedSessionIdManager) _sessionIdManager).memcachedSet(idInCluster, data);
 		}
 	}
-
-	protected byte[] pack(Object obj) {
-		if (obj == null) {
-			return null;
-		}
-		byte[] raw = null;
-		try {
-			ByteArrayOutputStream bout = new ByteArrayOutputStream();
-			ObjectOutputStream out = new ObjectOutputStream(bout);
-			out.writeObject(obj);
-			out.flush();
-			raw = bout.toByteArray();
-		} catch (IOException error) {
-			//
-		}
-		return raw;
-	}
-
-	protected Object unpack(byte[] raw) {
-		Object obj = null;
-		try {
-			ByteArrayInputStream bin = new ByteArrayInputStream(raw);
-			ObjectInputStream in = new ObjectInputStream(bin);
-			obj = in.readObject();
-		} catch (IOException error) {
-			// TODO: log messages
-		} catch (ClassNotFoundException error) {
-			// TODO: log messages
-		}
-		return obj;
-	}
-
-	protected MemcachedSessionData get(String idInCluster) {
-		MemcachedSessionData obj = null;
-		try {
-			Future<Object> f = _sessions.asyncGet(idInCluster);
-			byte[] raw = (byte[]) f.get(_memcachedTimeoutInMs,
-					TimeUnit.MILLISECONDS);
-			obj = MemcachedSessionData.unpack(raw);
-		} catch (Exception error) {
-			// TODO: log
-		}
-		return obj;
-	}
-
-	protected boolean set(String idInCluster, MemcachedSessionData obj) {
-		boolean result = false;
-		byte[] raw = MemcachedSessionData.pack(obj);
-		try {
-			Future<Boolean> f = _sessions.set(idInCluster,
-					_memcachedDefaultExpiry, raw);
-			result = f.get(_memcachedTimeoutInMs, TimeUnit.MILLISECONDS);
-		} catch (Exception error) {
-			// TODO: log
-		}
-		return result;
-	}
-
-	protected boolean delete(String idInCluster) {
-		boolean result = false;
-		try {
-			Future<Boolean> f = _sessions.delete(idInCluster);
-			result = f.get(_memcachedTimeoutInMs, TimeUnit.MILLISECONDS);
-		} catch (Exception error) {
-			// TODO: log
-		}
-		return result;
+	
+	protected MemcachedClient getConnection() {
+		return ((MemcachedSessionIdManager) _sessionIdManager).getConnection();
 	}
 
 	public void purge() {
@@ -365,30 +291,6 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 	 */
 	public long getSessionStoreCount() {
 		// TODO: count all sessions.
-		// return _sessions.find().count();
-		return -1;
+		return ((MemcachedSessionIdManager)_sessionIdManager).getSessions().size();
 	}
-
-	/*------------------------------------------------------------ */
-	/**
-	 * MongoDB keys are . delimited for nesting so .'s are protected characters
-	 * 
-	 * @param virtualHosts
-	 * @param contextPath
-	 * @return
-	 */
-	private String createContextId(String[] virtualHosts, String contextPath) {
-		String contextId = virtualHosts[0] + contextPath;
-
-		contextId.replace('/', '_');
-		contextId.replace('.', '_');
-		contextId.replace('\\', '_');
-
-		return contextId;
-	}
-
-	/**
-	 * Dig through a given dbObject for the nested value
-	 */
-
 }
