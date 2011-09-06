@@ -4,6 +4,11 @@
 	<artifactId>jetty-nosql-memcached</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>jetty-nosql-memcached</name>
+	<groupId>com.geishatokyo.jetty</groupId>
+	<properties>
+		<jetty.version>8.0.0.RC0</jetty.version>
+		<junit.version>4.8.1</junit.version>
+	</properties>
 	<dependencies>
 		<dependency>
 			<groupId>org.eclipse.jetty</groupId>
@@ -38,9 +43,45 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
-	<properties>
-		<jetty.version>8.0.0.RC0</jetty.version>
-		<junit.version>4.8.1</junit.version>
-	</properties>
-	<groupId>com.geishatokyo.jetty</groupId>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>5</source>
+					<target>5</target>
+					<encoding>UTF-8</encoding>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<configuration>
+					<archive>
+						<manifest>
+							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+						</manifest>
+					</archive>
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<configuration>
+					<descriptorRefs>
+						<descriptorRef>jar-with-dependencies</descriptorRef>
+					</descriptorRefs>
+				</configuration>
+				<executions>
+					<execution>
+						<id>make-assembly</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
 </project>
