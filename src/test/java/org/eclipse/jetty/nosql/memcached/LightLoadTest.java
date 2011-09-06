@@ -30,7 +30,6 @@ public class LightLoadTest extends AbstractLightLoadTest
     }
 
     @Test
-    @Ignore ("requires mongodb server")
     public void testLightLoad() throws Exception
     {
         super.testLightLoad();

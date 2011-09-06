@@ -30,7 +30,6 @@ public class NewSessionTest extends AbstractNewSessionTest
     }
 
     @Test
-    @Ignore ("requires mongodb server")
     public void testNewSession() throws Exception
     {
         super.testNewSession();
