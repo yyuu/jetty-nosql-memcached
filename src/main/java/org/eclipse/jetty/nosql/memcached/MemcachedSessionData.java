@@ -21,6 +21,7 @@ public class MemcachedSessionData implements Serializable {
 	public long _invalidated = -1;
 	public long _version = 0;
 	public Map<String, Object> _attributes = new HashMap<String, Object>();
+	public String _contextPath = "*";
 	
 	public MemcachedSessionData() {
 		this._created = System.currentTimeMillis();
@@ -142,6 +143,14 @@ public class MemcachedSessionData implements Serializable {
 
 	public void setVersion(long version) {
 		this._version = version;
+	}
+	
+	public String getContextPath() {
+		return _contextPath;
+	}
+	
+	public void setContextPath(String contextPath) {
+		this._contextPath = contextPath;
 	}
 
 	public static byte[] pack(MemcachedSessionData data) throws Exception {

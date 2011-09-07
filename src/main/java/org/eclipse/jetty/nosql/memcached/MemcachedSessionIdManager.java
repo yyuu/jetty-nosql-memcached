@@ -459,14 +459,14 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 		return clusterId;
 	}
 	
-	protected String memcachedKey(String key) {
+	protected String mangleKey(String key) {
 		return _memcachedKeyPrefix + key + _memcachedKeySuffix;
 	}
 
 	protected MemcachedSessionData memcachedGet(String idInCluster) {
 		MemcachedSessionData data = null;
 		try {
-			Future<Object> f = getConnection().asyncGet(memcachedKey(idInCluster));
+			Future<Object> f = getConnection().asyncGet(mangleKey(idInCluster));
 			byte[] raw = (byte[]) f.get(_memcachedTimeoutInMs,
 					TimeUnit.MILLISECONDS);
 			data = MemcachedSessionData.unpack(raw);
@@ -480,7 +480,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 		boolean result = false;
 		try {
 			byte[] raw = MemcachedSessionData.pack(data);
-			Future<Boolean> f = getConnection().set(memcachedKey(idInCluster), _memcachedDefaultExpiry, raw);
+			Future<Boolean> f = getConnection().set(mangleKey(idInCluster), _memcachedDefaultExpiry, raw);
 			result = f.get(_memcachedTimeoutInMs, TimeUnit.MILLISECONDS);
 		} catch (Exception error) {
 			log.warn("unable to set to memcached: id=" + idInCluster + ", data=" + data, error);
@@ -492,7 +492,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 		boolean result = false;
 		try {
 			byte[] raw = MemcachedSessionData.pack(data);
-			Future<Boolean> f = getConnection().add(memcachedKey(idInCluster), _memcachedDefaultExpiry, raw);
+			Future<Boolean> f = getConnection().add(mangleKey(idInCluster), _memcachedDefaultExpiry, raw);
 			result = f.get(_memcachedTimeoutInMs, TimeUnit.MILLISECONDS);
 		} catch (Exception error) {
 			log.warn("unable to add to memcached: id=" + idInCluster + ", data=" + data, error);
@@ -504,7 +504,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	protected boolean memcachedDelete(String idInCluster) {
 		boolean result = false;
 		try {
-			Future<Boolean> f = getConnection().delete(memcachedKey(idInCluster));
+			Future<Boolean> f = getConnection().delete(mangleKey(idInCluster));
 			result = f.get(_memcachedTimeoutInMs, TimeUnit.MILLISECONDS);
 		} catch (Exception error) {
 			log.warn("unable to delete from memcached: id=" + idInCluster, error);
