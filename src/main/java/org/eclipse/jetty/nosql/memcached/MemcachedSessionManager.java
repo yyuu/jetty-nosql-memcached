@@ -47,14 +47,8 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 	// private static final Logger LOG =
 	// Log.getLogger(MemcachedSessionManager.class);
 
-	private final static Logger __log = Log
-			.getLogger("org.eclipse.jetty.server.session");
+	private final static Logger __log = Log.getLogger("org.eclipse.jetty.server.session");
 	private static final Logger LOG = __log;
-
-	/**
-	 * the context id is only set when this class has been started
-	 */
-	private String _contextId = null;
 
 	/* ------------------------------------------------------------ */
 	public MemcachedSessionManager() {
@@ -98,12 +92,6 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 				newver = ((Long) version).intValue() + 1;
 			}
 			data.setVersion(newver);
-
-			// handle valid or invalid
-			if (!session.isValid()) {
-				data.setInvalid(true);
-				data.setInvalidated(System.currentTimeMillis());
-			}
 
 			((MemcachedSessionIdManager) _sessionIdManager).memcachedSet(session.getId(), data);
 			__log.debug("MemcachedSessionManager:save:db.sessions.update("
@@ -151,7 +139,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 		}
 
 		// If it has been flagged invalid, invalidate
-		boolean valid = !data.isInvalid();
+		boolean valid = data.isValid();
 		if (!valid) {
 			__log.debug("MemcachedSessionManager:refresh:marking invalid, valid flag "
 					+ valid);
@@ -193,7 +181,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 			return null;
 		}
 
-		boolean valid = !data.isInvalid();
+		boolean valid = data.isValid();
 		if (!valid) {
 			return null;
 		}
@@ -201,7 +189,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 		try {
 			long version = data.getVersion();
 			long created = data.getCreationTime();
-			long accessed = data.getAccessedTime();
+			long accessed = data.getAccessed();
 			NoSqlSession session = new NoSqlSession(this, created, accessed,
 					clusterId, version);
 
@@ -255,9 +243,8 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 		 */
 		MemcachedSessionData data = ((MemcachedSessionIdManager) _sessionIdManager).memcachedGet(idInCluster);
 
-		if (data != null && !data.isInvalid()) {
-			data.setInvalid(true);
-			data.setInvalidated(System.currentTimeMillis());
+		if (data != null && data.isValid()) {
+			data.setValid(false);
 			((MemcachedSessionIdManager) _sessionIdManager).memcachedSet(idInCluster, data);
 		}
 	}

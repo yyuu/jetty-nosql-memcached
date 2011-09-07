@@ -4,7 +4,6 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -12,22 +11,19 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
-import org.eclipse.jetty.nosql.NoSqlSession;
 import org.eclipse.jetty.server.session.AbstractSession;
+import org.eclipse.jetty.util.log.Log;
 
 public class MemcachedSessionData implements Serializable {
 	private static final long serialVersionUID = -3998063962105675446L;
 	public String _id = "_id";
 	public long _created = -1;
-	public long _cookieSet = -1;
 	public long _accessed = -1;
-	public long _lastAccessed = -1;
-	public String _workerName = "_workerName";
-	public boolean _invalid = false;
+	public boolean _valid = true;
 	public long _invalidated = -1;
 	public long _version = 0;
 	public Map<String, Object> _attributes = new HashMap<String, Object>();
-
+	
 	public MemcachedSessionData() {
 		this._created = System.currentTimeMillis();
 		this._accessed = _created;
@@ -50,11 +46,11 @@ public class MemcachedSessionData implements Serializable {
 		this._id = session.getId();
 		this._created = session.getCreationTime();
 		this._accessed = session.getAccessed();
-		for (Enumeration<String> e = session.getAttributeNames(); e
-				.hasMoreElements();) {
+		for (Enumeration<String> e = session.getAttributeNames(); e.hasMoreElements();) {
 			String key = e.nextElement();
 			this._attributes.put(key, session.getAttribute(key));
 		}
+		setValid(session.isValid());
 	}
 
 	public String getId() {
@@ -62,8 +58,9 @@ public class MemcachedSessionData implements Serializable {
 	}
 
 	public void setId(String id) {
-		if (id == null)
+		if (id == null) {
 			id = "";
+		}
 		this._id = id;
 	}
 
@@ -75,38 +72,12 @@ public class MemcachedSessionData implements Serializable {
 		this._created = created;
 	}
 
-	public long getCookieSetTime() {
-		return _cookieSet;
-	}
-
-	public void setCookieSetTime(long cookieSet) {
-		this._cookieSet = cookieSet;
-	}
-
-	public long getAccessedTime() {
+	public long getAccessed() {
 		return _accessed;
 	}
 
-	public void setAccessedTime(long accessed) {
+	public void setAccessed(long accessed) {
 		this._accessed = accessed;
-	}
-
-	public long getLastAccessedTime() {
-		return _lastAccessed;
-	}
-
-	public void setLastAccessedTime(long lastAccessed) {
-		this._lastAccessed = lastAccessed;
-	}
-
-	public String getWorkerName() {
-		return _workerName;
-	}
-
-	public void setWorkerName(String workerName) {
-		if (workerName == null)
-			workerName = null;
-		this._workerName = workerName;
 	}
 
 	public synchronized Map<String, Object> getAttributeMap() {
@@ -135,18 +106,28 @@ public class MemcachedSessionData implements Serializable {
 
 	@Override
 	public String toString() {
-		return "{id:" + _id + ", lastNode:" + getWorkerName() + ", created:"
-				+ getCreationTime() + ", accessed:" + getAccessedTime()
-				+ ", lastAccessed:" + getLastAccessedTime() + ", attributes: "
-				+ getAttributeMap() + "}";
+		return "{id:" + getId() +
+				", created:" + getCreationTime() +
+				", accessed:" + getAccessed() +
+				", attributes:" + getAttributeMap() +
+				", valid:" + isValid() +
+				", invalidated:" + getInvalidated() +
+		"}";
 	}
 
-	public boolean isInvalid() {
-		return _invalid;
+	public boolean isValid() {
+		return _valid;
 	}
 
-	public void setInvalid(boolean invalid) {
-		this._invalid = invalid;
+	public void setValid(boolean valid) {
+		setValid(valid, System.currentTimeMillis());
+	}
+	
+	public void setValid(boolean valid, long invalidated) {
+		this._valid = valid;
+		if (!valid) {
+			setInvalidated(invalidated);
+		}
 	}
 
 	public long getInvalidated() {
@@ -165,18 +146,18 @@ public class MemcachedSessionData implements Serializable {
 		this._version = version;
 	}
 
-	public static byte[] pack(MemcachedSessionData obj) {
-		if (obj == null) {
+	public static byte[] pack(MemcachedSessionData data) {
+		if (data == null) {
 			return null;
 		}
 		byte[] raw = null;
 		try {
-			ByteArrayOutputStream bout = new ByteArrayOutputStream();
-			ObjectOutputStream out = new ObjectOutputStream(bout);
-			out.writeObject(obj);
-			raw = bout.toByteArray();
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			ObjectOutputStream oos = new ObjectOutputStream(baos);
+			oos.writeObject(data);
+			raw = baos.toByteArray();
 		} catch (IOException error) {
-			//
+			Log.warn("MemcachedSessionData#pack: unable to pack", error);
 		}
 		return raw;
 	}
@@ -185,16 +166,18 @@ public class MemcachedSessionData implements Serializable {
 		if (raw == null) {
 			return null;
 		}
-		MemcachedSessionData obj = null;
+		MemcachedSessionData data = null;
 		try {
-			ByteArrayInputStream bin = new ByteArrayInputStream(raw);
-			ObjectInputStream in = new ObjectInputStream(bin);
-			obj = (MemcachedSessionData) in.readObject();
+			ByteArrayInputStream bais = new ByteArrayInputStream(raw);
+			ObjectInputStream ois = new ObjectInputStream(bais);
+			data = (MemcachedSessionData) ois.readObject();
 		} catch (IOException error) {
-			// TODO: log messages
+			Log.warn("MemcachedSessionData#unpack: unable to unpack", error);
 		} catch (ClassNotFoundException error) {
-			// TODO: log messages
+			Log.warn("MemcachedSessionData#unpack: unable to unpack", error);
+		} catch (ClassCastException error) {
+			Log.warn("MemcachedSessionData#unpack: unable to unpack", error);
 		}
-		return obj;
+		return data;
 	}
 }

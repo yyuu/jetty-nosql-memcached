@@ -152,7 +152,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 			if (accessed != null && accessed < threshold) {
 				// check latest data.
 				MemcachedSessionData data = memcachedGet(id);
-				if (data != null && data.getAccessedTime() < threshold) {
+				if (data != null && data.getAccessed() < threshold) {
 					invalidateAll(id);
 				}
 			}
@@ -202,7 +202,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 			if (invalidated != null && invalidated < threshold) {
 				// check latest data.
 				MemcachedSessionData data = memcachedGet(id);
-				if (data != null && data.isInvalid()
+				if (data != null && !data.isValid()
 						&& data.getInvalidated() < threshold) {
 					__log.debug("MemcachedSessionIdManager:purging invalid "
 							+ id);
