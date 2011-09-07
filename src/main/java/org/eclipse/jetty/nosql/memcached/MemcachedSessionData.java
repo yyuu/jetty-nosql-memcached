@@ -6,13 +6,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 import org.eclipse.jetty.server.session.AbstractSession;
-import org.eclipse.jetty.util.log.Log;
 
 public class MemcachedSessionData implements Serializable {
 	private static final long serialVersionUID = -3998063962105675446L;
@@ -146,7 +144,7 @@ public class MemcachedSessionData implements Serializable {
 		this._version = version;
 	}
 
-	public static byte[] pack(MemcachedSessionData data) {
+	public static byte[] pack(MemcachedSessionData data) throws Exception {
 		if (data == null) {
 			return null;
 		}
@@ -156,13 +154,13 @@ public class MemcachedSessionData implements Serializable {
 			ObjectOutputStream oos = new ObjectOutputStream(baos);
 			oos.writeObject(data);
 			raw = baos.toByteArray();
-		} catch (IOException error) {
-			Log.warn("MemcachedSessionData#pack: unable to pack", error);
+		} catch (Exception error) {
+			throw(error);
 		}
 		return raw;
 	}
 
-	public static MemcachedSessionData unpack(byte[] raw) {
+	public static MemcachedSessionData unpack(byte[] raw) throws Exception {
 		if (raw == null) {
 			return null;
 		}
@@ -171,12 +169,8 @@ public class MemcachedSessionData implements Serializable {
 			ByteArrayInputStream bais = new ByteArrayInputStream(raw);
 			ObjectInputStream ois = new ObjectInputStream(bais);
 			data = (MemcachedSessionData) ois.readObject();
-		} catch (IOException error) {
-			Log.warn("MemcachedSessionData#unpack: unable to unpack", error);
-		} catch (ClassNotFoundException error) {
-			Log.warn("MemcachedSessionData#unpack: unable to unpack", error);
-		} catch (ClassCastException error) {
-			Log.warn("MemcachedSessionData#unpack: unable to unpack", error);
+		} catch (Exception error) {
+			throw(error);
 		}
 		return data;
 	}

@@ -66,8 +66,7 @@ import org.eclipse.jetty.util.log.Logger;
  * unvalidated atm)
  */
 public class MemcachedSessionIdManager extends AbstractSessionIdManager {
-	private final static Logger __log = Log
-			.getLogger("org.eclipse.jetty.server.session");
+	private final static Logger log = Log.getLogger("org.eclipse.jetty.nosql.memcached");
 
 	private MemcachedClient _connection;
 	protected Server _server;
@@ -101,11 +100,6 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	 */
 	private long _purgeValidAge = 7 * 24 * 60 * 60 * 1000; // default 1 week
 
-	/**
-	 * the collection of session ids known to this manager
-	 * 
-	 * TODO consider if this ought to be concurrent or not
-	 */
 	protected final Map<String, SessionDataCache> _sessions = new ConcurrentHashMap<String, SessionDataCache>();
 	protected class SessionDataCache {
 		protected long _accessed = -1;
@@ -160,7 +154,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	 * point of expiration.
 	 */
 	protected void scavenge() {
-		__log.debug("SessionIdManager:scavenge:called with delay" + _scavengeDelay);
+		log.debug("SessionIdManager:scavenge:called with delay" + _scavengeDelay);
 
 		/*
 		 * run a query returning results that: - are in the known list of
@@ -193,7 +187,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	 * coherence issues, not to be used in a running cluster
 	 */
 	protected void scavengeFully() {
-		__log.debug("SessionIdManager:scavengeFully");
+		log.debug("SessionIdManager:scavengeFully");
 		for (String id : _sessions.keySet()) {
 			invalidateAll(id);
 		}
@@ -227,7 +221,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 				MemcachedSessionData data = memcachedGet(id);
 				if (data != null && 0 <= data.getAccessed() && data.getInvalidated() < threshold) {
 					if (!data.isValid()) {
-						__log.debug("MemcachedSessionIdManager:purging invalid " + id);
+						log.debug("MemcachedSessionIdManager:purging invalid " + id);
 						memcachedDelete(id);
 						_sessions.remove(id);
 					}
@@ -244,7 +238,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	 */
 	protected void purgeFully() {
 		for (String id: _sessions.keySet()) {
-			__log.debug("MemcachedSessionIdManager:purging invalid " + id);
+			log.debug("MemcachedSessionIdManager:purging invalid " + id);
 			memcachedDelete(id);
 			_sessions.remove(id);
 		}
@@ -256,7 +250,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 			try {
 				this._connection = new MemcachedClient(AddrUtil.getAddresses(_memcachedServerString));
 			} catch (IOException error) {
-				__log.warn("MemcachedSessionIdManager:getConnection: unable to establish connection to " + _memcachedServerString);
+				log.warn("MemcachedSessionIdManager:getConnection: unable to establish connection to " + _memcachedServerString);
 			}
 		}
 		return _connection;
@@ -327,7 +321,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	/* ------------------------------------------------------------ */
 	@Override
 	protected void doStart() throws Exception {
-		__log.debug("MemcachedSessionIdManager:starting");
+		log.debug("MemcachedSessionIdManager:starting");
 
 		/*
 		 * setup the scavenger thread
@@ -408,7 +402,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 			return;
 		}
 
-		__log.debug("MemcachedSessionIdManager:addSession:" + session.getId());
+		log.debug("MemcachedSessionIdManager:addSession:" + session.getId());
 
 		SessionDataCache cache = _sessions.get(session.getId());
 		if (cache == null) {
@@ -428,12 +422,11 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 
 	/* ------------------------------------------------------------ */
 	public void invalidateAll(String sessionId) {
-			_sessions.remove(sessionId);
+		_sessions.remove(sessionId);
 
 		// tell all contexts that may have a session object with this id to
 		// get rid of them
-		Handler[] contexts = _server
-				.getChildHandlersByClass(ContextHandler.class);
+		Handler[] contexts = _server.getChildHandlersByClass(ContextHandler.class);
 		for (int i = 0; contexts != null && i < contexts.length; i++) {
 			SessionHandler sessionHandler = (SessionHandler) ((ContextHandler) contexts[i])
 					.getChildHandlerByClass(SessionHandler.class);
@@ -457,61 +450,66 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	}
 
 	/* ------------------------------------------------------------ */
-	// TODO not sure if this is correct
 	public String getClusterId(String nodeId) {
+		if (nodeId == null) {
+			return null;
+		}
 		int dot = nodeId.lastIndexOf('.');
 		return (dot > 0) ? nodeId.substring(0, dot) : nodeId;
 	}
 
 	/* ------------------------------------------------------------ */
 	public String getNodeId(String clusterId, HttpServletRequest request) {
-		if (_workerName != null)
+		if (clusterId == null) {
+			return null;
+		}
+		if (_workerName != null) {
 			return clusterId + '.' + _workerName;
-
+		}
 		return clusterId;
-	}
-	
-	protected MemcachedSessionData memcachedGet(String idInCluster) {
-		MemcachedSessionData obj = null;
-		try {
-			Future<Object> f = getConnection().asyncGet(memcachedKey(idInCluster));
-			byte[] raw = (byte[]) f.get(_memcachedTimeoutInMs,
-					TimeUnit.MILLISECONDS);
-			obj = MemcachedSessionData.unpack(raw);
-		} catch (Exception error) {
-			// TODO: log
-		}
-		return obj;
-	}
-
-	protected boolean memcachedSet(String idInCluster, MemcachedSessionData obj) {
-		boolean result = false;
-		byte[] raw = MemcachedSessionData.pack(obj);
-		try {
-			Future<Boolean> f = getConnection().set(memcachedKey(idInCluster), _memcachedDefaultExpiry, raw);
-			result = f.get(_memcachedTimeoutInMs, TimeUnit.MILLISECONDS);
-		} catch (Exception error) {
-			// TODO: log
-		}
-		return result;
-	}
-	
-	protected boolean memcachedAdd(String idInCluster, MemcachedSessionData obj) {
-		boolean result = false;
-		byte[] raw = MemcachedSessionData.pack(obj);
-		try {
-			Future<Boolean> f = getConnection().add(memcachedKey(idInCluster), _memcachedDefaultExpiry, raw);
-			result = f.get(_memcachedTimeoutInMs, TimeUnit.MILLISECONDS);
-		} catch (Exception error) {
-			// TODO: log
-		}
-		return result;
 	}
 	
 	protected String memcachedKey(String key) {
 		return _memcachedKeyPrefix + key + _memcachedKeySuffix;
 	}
 
+	protected MemcachedSessionData memcachedGet(String idInCluster) {
+		MemcachedSessionData data = null;
+		try {
+			Future<Object> f = getConnection().asyncGet(memcachedKey(idInCluster));
+			byte[] raw = (byte[]) f.get(_memcachedTimeoutInMs,
+					TimeUnit.MILLISECONDS);
+			data = MemcachedSessionData.unpack(raw);
+		} catch (Exception error) {
+			log.warn("unable to get from memcached: id=" + idInCluster, error);
+		}
+		return data;
+	}
+
+	protected boolean memcachedSet(String idInCluster, MemcachedSessionData data) {
+		boolean result = false;
+		try {
+			byte[] raw = MemcachedSessionData.pack(data);
+			Future<Boolean> f = getConnection().set(memcachedKey(idInCluster), _memcachedDefaultExpiry, raw);
+			result = f.get(_memcachedTimeoutInMs, TimeUnit.MILLISECONDS);
+		} catch (Exception error) {
+			log.warn("unable to set to memcached: id=" + idInCluster + ", data=" + data, error);
+		}
+		return result;
+	}
+	
+	protected boolean memcachedAdd(String idInCluster, MemcachedSessionData data) {
+		boolean result = false;
+		try {
+			byte[] raw = MemcachedSessionData.pack(data);
+			Future<Boolean> f = getConnection().add(memcachedKey(idInCluster), _memcachedDefaultExpiry, raw);
+			result = f.get(_memcachedTimeoutInMs, TimeUnit.MILLISECONDS);
+		} catch (Exception error) {
+			log.warn("unable to add to memcached: id=" + idInCluster + ", data=" + data, error);
+		}
+		return result;
+	}
+	
 
 	protected boolean memcachedDelete(String idInCluster) {
 		boolean result = false;
@@ -519,7 +517,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 			Future<Boolean> f = getConnection().delete(memcachedKey(idInCluster));
 			result = f.get(_memcachedTimeoutInMs, TimeUnit.MILLISECONDS);
 		} catch (Exception error) {
-			// TODO: log
+			log.warn("unable to delete from memcached: id=" + idInCluster, error);
 		}
 		return result;
 	}

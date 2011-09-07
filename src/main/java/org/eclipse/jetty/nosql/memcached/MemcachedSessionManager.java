@@ -44,11 +44,7 @@ import com.mongodb.DBObject;
 import net.spy.memcached.MemcachedClient;
 
 public class MemcachedSessionManager extends NoSqlSessionManager {
-	// private static final Logger LOG =
-	// Log.getLogger(MemcachedSessionManager.class);
-
-	private final static Logger __log = Log.getLogger("org.eclipse.jetty.server.session");
-	private static final Logger LOG = __log;
+	private final static Logger log = Log.getLogger("org.eclipse.jetty.nosql.memcached");
 
 	/* ------------------------------------------------------------ */
 	public MemcachedSessionManager() {
@@ -74,7 +70,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 		try {
 			super.setSessionIdManager((MemcachedSessionIdManager) idManager);
 		} catch (ClassCastException error) {
-			__log.warn("unable to cast " + idManager.getClass() + " to " + MemcachedSessionIdManager.class.getClass() + ".");
+			log.warn("unable to cast " + idManager.getClass() + " to " + MemcachedSessionIdManager.class.getClass() + ".");
 			throw(error);
 		}
 	}
@@ -84,7 +80,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 	protected synchronized Object save(NoSqlSession session, Object version,
 			boolean activateAfterSave) {
 		try {
-			__log.debug("MemcachedSessionManager:save:" + session);
+			log.debug("MemcachedSessionManager:save:" + session);
 			session.willPassivate();
 
 			MemcachedSessionData data = new MemcachedSessionData(session);
@@ -99,7 +95,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 			data.setVersion(newver);
 
 			((MemcachedSessionIdManager) _sessionIdManager).memcachedSet(session.getId(), data);
-			__log.debug("MemcachedSessionManager:save:db.sessions.update("
+			log.debug("MemcachedSessionManager:save:db.sessions.update("
 					+ session.getId() + "," + data + ")");
 
 			if (activateAfterSave)
@@ -107,7 +103,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 
 			return new Long(newver);
 		} catch (Exception e) {
-			LOG.warn(e);
+			log.warn(e);
 		}
 		return null;
 	}
@@ -115,7 +111,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 	/*------------------------------------------------------------ */
 	@Override
 	protected Object refresh(NoSqlSession session, Object version) {
-		__log.debug("MemcachedSessionManager:refresh " + session);
+		log.debug("MemcachedSessionManager:refresh " + session);
 
 		// check if our in memory version is the same as what is on the disk
 		if (version != null) {
@@ -125,7 +121,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 				saved = data.getVersion();
 
 				if (saved == ((Long) version).longValue()) {
-					__log.debug("MemcachedSessionManager:refresh not needed");
+					log.debug("MemcachedSessionManager:refresh not needed");
 					return version;
 				}
 				version = new Long(saved);
@@ -138,7 +134,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 
 		// If it doesn't exist, invalidate
 		if (data == null) {
-			__log.debug("MemcachedSessionManager:refresh:marking invalid, no object");
+			log.debug("MemcachedSessionManager:refresh:marking invalid, no object");
 			session.invalidate();
 			return null;
 		}
@@ -146,7 +142,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 		// If it has been flagged invalid, invalidate
 		boolean valid = data.isValid();
 		if (!valid) {
-			__log.debug("MemcachedSessionManager:refresh:marking invalid, valid flag "
+			log.debug("MemcachedSessionManager:refresh:marking invalid, valid flag "
 					+ valid);
 			session.invalidate();
 			return null;
@@ -169,7 +165,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 
 			return version;
 		} catch (Exception e) {
-			LOG.warn(e);
+			log.warn(e);
 		}
 
 		return null;
@@ -180,7 +176,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 	protected synchronized NoSqlSession loadSession(String clusterId) {
 		MemcachedSessionData data = ((MemcachedSessionIdManager) _sessionIdManager).memcachedGet(clusterId);
 
-		__log.debug("MemcachedSessionManager:loaded " + data);
+		log.debug("MemcachedSessionManager:loaded " + data);
 
 		if (data == null) {
 			return null;
@@ -201,7 +197,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 			// get the attributes for the context
 			Enumeration<String> attrs = data.getAttributeNames();
 
-			__log.debug("MemcachedSessionManager:attrs: " + attrs);
+			log.debug("MemcachedSessionManager:attrs: " + attrs);
 			if (attrs != null) {
 				while (attrs.hasMoreElements()) {
 					String name = attrs.nextElement();
@@ -216,7 +212,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 
 			return session;
 		} catch (Exception e) {
-			LOG.warn(e);
+			log.warn(e);
 		}
 		return null;
 	}
@@ -224,7 +220,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 	/*------------------------------------------------------------ */
 	@Override
 	protected boolean remove(NoSqlSession session) {
-		__log.debug("MemcachedSessionManager:remove:session "
+		log.debug("MemcachedSessionManager:remove:session "
 				+ session.getClusterId());
 
 		/*
@@ -237,7 +233,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 	/*------------------------------------------------------------ */
 	@Override
 	protected void invalidateSession(String idInCluster) {
-		__log.debug("MemcachedSessionManager:invalidateSession:invalidating "
+		log.debug("MemcachedSessionManager:invalidateSession:invalidating "
 				+ idInCluster);
 
 		super.invalidateSession(idInCluster);
