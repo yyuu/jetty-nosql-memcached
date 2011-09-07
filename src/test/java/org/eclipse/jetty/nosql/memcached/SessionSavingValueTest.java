@@ -31,7 +31,6 @@ import org.eclipse.jetty.http.HttpMethods;
 import org.eclipse.jetty.nosql.NoSqlSession;
 import org.eclipse.jetty.server.session.AbstractSessionValueSavingTest;
 import org.eclipse.jetty.server.session.AbstractTestServer;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class SessionSavingValueTest extends AbstractSessionValueSavingTest
