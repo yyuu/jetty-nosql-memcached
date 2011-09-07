@@ -76,7 +76,6 @@ public class SessionSavingValueTest extends AbstractSessionValueSavingTest
     }
 
     @Test
-    @Ignore ("requires mongodb server")
     public void testSessionValueSaving() throws Exception
     {
         String contextPath = "";
@@ -192,6 +191,8 @@ public class SessionSavingValueTest extends AbstractSessionValueSavingTest
                 Pojo p = (Pojo)session.getAttribute("objectTest");
                 
                 //System.out.println(p.getName() + " / " + p.getValue() );
+                assertEquals(p.getName(), "foo");
+                assertEquals(p.getValue(), "bar");
             }
 
         }

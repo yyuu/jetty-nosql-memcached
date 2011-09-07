@@ -26,7 +26,6 @@ public class ClientCrossContextSessionTest extends AbstractClientCrossContextSes
     }
 
     @Test
-    @Ignore ("requires mongodb server")
     public void testCrossContextDispatch() throws Exception
     {
         super.testCrossContextDispatch();
