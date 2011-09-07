@@ -106,8 +106,34 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	 * 
 	 * TODO consider if this ought to be concurrent or not
 	 */
-	protected final Map<String, Long> _sessions = new ConcurrentHashMap<String, Long>();
-	protected final Map<String, Long> _invalidatedSessions = new ConcurrentHashMap<String, Long>();
+	protected final Map<String, SessionDataCache> _sessions = new ConcurrentHashMap<String, SessionDataCache>();
+	protected class SessionDataCache {
+		protected long _accessed = -1;
+		protected long _invalidated = -1;
+		
+		protected SessionDataCache() {
+			this._accessed = System.currentTimeMillis();
+		}
+		protected SessionDataCache(long accessed) {
+			this._accessed = accessed;
+		}
+		
+		protected void setAccessed(long accessed) {
+			this._accessed = accessed;
+		}
+		
+		protected long getAccessed() {
+			return _accessed;
+		}
+		
+		protected void setInvalidated(long invalidated) {
+			this._invalidated = invalidated;
+		}
+		
+		protected long getInvalidated() {
+			return _invalidated;
+		}
+	}
 
 	private String _memcachedServerString = "127.0.0.1:11211";
 	private int _memcachedDefaultExpiry = 0; // never expire
@@ -147,12 +173,10 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 
 		long threshold = System.currentTimeMillis() - _scavengeDelay;
 		for (String id : _sessions.keySet()) {
-			// check target from local cache.
-			Long accessed = _sessions.get(id);
-			if (accessed != null && accessed < threshold) {
-				// check latest data.
+			SessionDataCache cache = _sessions.get(id);
+			if (cache != null && 0 <= cache.getAccessed() && cache.getAccessed() < threshold) {
 				MemcachedSessionData data = memcachedGet(id);
-				if (data != null && data.getAccessed() < threshold) {
+				if (data != null && 0 <= data.getAccessed() && data.getAccessed() < threshold) {
 					invalidateAll(id);
 				}
 			}
@@ -196,18 +220,17 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	 */
 	protected void purge() {
 		long threshold = System.currentTimeMillis() - _purgeInvalidAge;
-		for (String id : _invalidatedSessions.keySet()) {
+		for (String id : _sessions.keySet()) {
 			// check target from local cache.
-			Long invalidated = _invalidatedSessions.get(id);
-			if (invalidated != null && invalidated < threshold) {
-				// check latest data.
+			SessionDataCache cache = _sessions.get(id);
+			if (cache != null && 0 <= cache.getAccessed() && cache.getInvalidated() < threshold) {
 				MemcachedSessionData data = memcachedGet(id);
-				if (data != null && !data.isValid()
-						&& data.getInvalidated() < threshold) {
-					__log.debug("MemcachedSessionIdManager:purging invalid "
-							+ id);
-					memcachedDelete(id);
-					_invalidatedSessions.remove(id);
+				if (data != null && 0 <= data.getAccessed() && data.getInvalidated() < threshold) {
+					if (!data.isValid()) {
+						__log.debug("MemcachedSessionIdManager:purging invalid " + id);
+						memcachedDelete(id);
+						_sessions.remove(id);
+					}
 				}
 			}
 		}
@@ -220,10 +243,10 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	 * 
 	 */
 	protected void purgeFully() {
-		for (String id : _invalidatedSessions.keySet()) {
+		for (String id: _sessions.keySet()) {
 			__log.debug("MemcachedSessionIdManager:purging invalid " + id);
 			memcachedDelete(id);
-			_invalidatedSessions.remove(id);
+			_sessions.remove(id);
 		}
 	}
 
@@ -385,13 +408,13 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 			return;
 		}
 
-		/*
-		 * already a part of the index in mongo...
-		 */
-
 		__log.debug("MemcachedSessionIdManager:addSession:" + session.getId());
 
-		_sessions.put(session.getId(), ((AbstractSession)session).getAccessed());
+		SessionDataCache cache = _sessions.get(session.getId());
+		if (cache == null) {
+			cache = new SessionDataCache(((AbstractSession)session).getAccessed());
+		}
+		_sessions.put(session.getId(), cache);
 	}
 
 	/* ------------------------------------------------------------ */
@@ -425,7 +448,12 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 			}
 		}
 
-		_invalidatedSessions.put(sessionId, System.currentTimeMillis());
+		SessionDataCache cache = _sessions.get(sessionId);
+		if (cache == null) {
+			cache = new SessionDataCache();
+		}
+		cache.setInvalidated(System.currentTimeMillis());
+		_sessions.put(sessionId, cache);
 	}
 
 	/* ------------------------------------------------------------ */

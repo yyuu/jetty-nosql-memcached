@@ -16,7 +16,7 @@ import org.eclipse.jetty.util.log.Log;
 
 public class MemcachedSessionData implements Serializable {
 	private static final long serialVersionUID = -3998063962105675446L;
-	public String _id = "_id";
+	public String _id = "";
 	public long _created = -1;
 	public long _accessed = -1;
 	public boolean _valid = true;
