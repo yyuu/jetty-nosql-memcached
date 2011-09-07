@@ -13,33 +13,13 @@ package org.eclipse.jetty.nosql.memcached;
 //You may elect to redistribute this code under either of these licenses.
 //========================================================================
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.UnknownHostException;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
 import java.util.Enumeration;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jetty.nosql.NoSqlSession;
 import org.eclipse.jetty.nosql.NoSqlSessionManager;
 import org.eclipse.jetty.server.SessionIdManager;
 import org.eclipse.jetty.util.log.Log;
 import org.eclipse.jetty.util.log.Logger;
-
-import com.mongodb.DBObject;
-//import org.omg.CORBA._IDLTypeStub;
-
-//import com.mongodb.BasicDBObject;
-//import com.mongodb.DBCollection;
-//import com.mongodb.DBObject;
-//import com.mongodb.MongoException;
 
 import net.spy.memcached.MemcachedClient;
 

@@ -13,23 +13,15 @@ package org.eclipse.jetty.nosql.memcached;
 //You may elect to redistribute this code under either of these licenses.
 //========================================================================
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.net.UnknownHostException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -37,7 +29,6 @@ import javax.servlet.http.HttpSession;
 import net.spy.memcached.AddrUtil;
 import net.spy.memcached.MemcachedClient;
 
-import org.eclipse.jetty.nosql.NoSqlSession;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.SessionManager;
@@ -45,7 +36,6 @@ import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.session.AbstractSession;
 import org.eclipse.jetty.server.session.AbstractSessionIdManager;
 import org.eclipse.jetty.server.session.SessionHandler;
-import org.eclipse.jetty.util.ConcurrentHashSet;
 import org.eclipse.jetty.util.log.Log;
 import org.eclipse.jetty.util.log.Logger;
 

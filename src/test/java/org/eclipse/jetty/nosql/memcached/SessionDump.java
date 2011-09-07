@@ -33,8 +33,8 @@ import javax.servlet.http.HttpSession;
  */
 public class SessionDump extends HttpServlet
 {
-
-    int redirectCount=0;
+	private static final long serialVersionUID = 6248705391687405949L;
+	int redirectCount=0;
     /* ------------------------------------------------------------ */
     String pageType;
 
@@ -128,7 +128,7 @@ public class SessionDump extends HttpServlet
                 out.println("<b>Context:</b> "+session.getServletContext()+"<br/>");
                 
               
-                Enumeration keys=session.getAttributeNames();
+                Enumeration<String> keys=session.getAttributeNames();
                 while(keys.hasMoreElements())
                 {
                     String name=(String)keys.nextElement();

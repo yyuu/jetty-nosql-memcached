@@ -19,10 +19,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Serializable;
-import java.lang.management.ManagementFactory;
-import java.net.MalformedURLException;
 
-import javax.management.remote.JMXServiceURL;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -31,8 +28,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.client.ContentExchange;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.http.HttpMethods;
-import org.eclipse.jetty.jmx.ConnectorServer;
-import org.eclipse.jetty.jmx.MBeanContainer;
 import org.eclipse.jetty.nosql.NoSqlSession;
 import org.eclipse.jetty.server.session.AbstractSessionValueSavingTest;
 import org.eclipse.jetty.server.session.AbstractTestServer;
@@ -167,7 +162,9 @@ public class SessionSavingValueTest extends AbstractSessionValueSavingTest
 
     public static class TestServlet extends HttpServlet
     {
-        @Override
+		private static final long serialVersionUID = -225790042588139275L;
+
+		@Override
         protected void doGet(HttpServletRequest request, HttpServletResponse httpServletResponse) throws ServletException, IOException
         {
             String action = request.getParameter("action");
@@ -220,7 +217,8 @@ public class SessionSavingValueTest extends AbstractSessionValueSavingTest
         
         public class Pojo implements Serializable
         {
-            private String _name;
+			private static final long serialVersionUID = -5149700272943378810L;
+			private String _name;
             private String _value;
             
             public Pojo( String name, String value )

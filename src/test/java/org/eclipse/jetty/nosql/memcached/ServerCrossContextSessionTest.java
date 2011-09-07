@@ -15,7 +15,6 @@ package org.eclipse.jetty.nosql.memcached;
 
 import org.eclipse.jetty.server.session.AbstractServerCrossContextSessionTest;
 import org.eclipse.jetty.server.session.AbstractTestServer;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class ServerCrossContextSessionTest extends AbstractServerCrossContextSessionTest
