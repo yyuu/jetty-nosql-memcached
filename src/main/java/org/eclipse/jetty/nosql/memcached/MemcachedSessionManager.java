@@ -67,21 +67,26 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 			log.debug("MemcachedSessionManager:save:" + session);
 			session.willPassivate();
 
-			MemcachedSessionData data = new MemcachedSessionData(session);
-			data.setContextPath(_contextPath);
-			long newver = 0;
-			// handle new or existing
-			if (version == null) {
-				// New session
-				newver = 1;
+			MemcachedSessionData data = null;
+			if (session.isValid()) {
+				data = new MemcachedSessionData(session);
 			} else {
+				Log.warn("MemcachedSessionManager#save: discarding attributes of invalidated session: id=" + session.getId());
+				data = new MemcachedSessionData(session.getId(), session.getCreationTime());
+				data.setValid(false);
+			}
+			data.setContextPath(_contextPath);
+			long newver = 1; // default version for new sessions
+			if (version != null) {
 				newver = ((Long) version).intValue() + 1;
 			}
 			data.setVersion(newver);
 
-			memcachedSet(session.getId(), data); // TODO: check returned value
-			log.debug("MemcachedSessionManager:save:db.sessions.update("
-					+ session.getId() + "," + data + ")");
+			boolean success = memcachedSet(session.getId(), data);
+			if (!success) {
+				throw(new RuntimeException("unable to set data on memcached: data=" + data));
+			}
+			log.debug("MemcachedSessionManager:save:db.sessions.update(" + session.getId() + "," + data + ")");
 
 			if (activateAfterSave) {
 				session.didActivate();
@@ -228,8 +233,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 	/*------------------------------------------------------------ */
 	@Override
 	protected void invalidateSession(String idInCluster) {
-		log.debug("MemcachedSessionManager:invalidateSession:invalidating "
-				+ idInCluster);
+		log.debug("MemcachedSessionManager:invalidateSession:invalidating " + idInCluster);
 
 		super.invalidateSession(idInCluster);
 
@@ -241,7 +245,10 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 
 		if (data != null && data.isValid()) {
 			data.setValid(false);
-			memcachedSet(idInCluster, data); // TODO: check returned value
+			boolean success = memcachedSet(idInCluster, data);
+			if (!success) {
+				throw(new RuntimeException("unable to set data on memcached: data=" + data));
+			}
 		}
 	}
 

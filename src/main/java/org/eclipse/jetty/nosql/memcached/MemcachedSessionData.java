@@ -33,23 +33,22 @@ public class MemcachedSessionData implements Serializable {
 		this._created = System.currentTimeMillis();
 		this._accessed = _created;
 	}
-
-	public MemcachedSessionData(String sessionId, Map<String, Object> attributes) {
+	
+	public MemcachedSessionData(String sessionId, long created) {
 		this._id = sessionId;
-		this._created = System.currentTimeMillis();
-		this._accessed = _created;
-		this._attributes = attributes;
+		this._created = created;
+		this._accessed = System.currentTimeMillis();
 	}
 
 	public MemcachedSessionData(AbstractSession session) {
 		this._id = session.getId();
 		this._created = session.getCreationTime();
 		this._accessed = session.getAccessed();
-		for (Enumeration<String> e = session.getAttributeNames(); e.hasMoreElements();) {
+		setValid(session.isValid());
+		for (Enumeration<String> e=session.getAttributeNames(); e.hasMoreElements();) {
 			String key = e.nextElement();
 			this._attributes.put(key, session.getAttribute(key));
 		}
-		setValid(session.isValid());
 	}
 
 	public String getId() {
