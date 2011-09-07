@@ -144,7 +144,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	 * point of expiration.
 	 */
 	protected void scavenge() {
-		log.debug("SessionIdManager:scavenge:called with delay" + _scavengeDelay);
+		log.debug("SessionIdManager#scavenge:called with delay" + _scavengeDelay);
 
 		/*
 		 * run a query returning results that: - are in the known list of
@@ -155,15 +155,29 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 		 * full sessions
 		 */
 
-		long threshold = System.currentTimeMillis() - _scavengeDelay;
+		long t = System.currentTimeMillis() - _scavengeDelay;
 		for (String id : _sessions.keySet()) {
 			SessionDataCache cache = _sessions.get(id);
-			if (cache != null && 0 <= cache.getAccessed() && cache.getAccessed() < threshold) {
-				MemcachedSessionData data = memcachedGet(id);
-				if (data != null && 0 <= data.getAccessed() && data.getAccessed() < threshold) {
-					invalidateAll(id);
-				}
+			if (cache == null) {
+				// cached record was disappeared during iteration. 
+				_sessions.remove(id);
+				continue;
 			}
+			if (cache.getAccessed() < 0 || t < cache.getAccessed()) {
+				continue;
+			}
+			// refresh cached data and test again.
+			MemcachedSessionData data = memcachedGet(id);
+			if (data == null) {
+				// record was disappeared during iteration.
+				_sessions.remove(id);
+				continue;
+			}
+			if (data.getAccessed() < 0 || t < data.getAccessed()) {
+				continue;
+			}
+			log.debug("MemcachedSessionIdManager:scavenging valid " + id);
+			invalidateAll(id);
 		}
 	}
 
@@ -177,8 +191,28 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	 * coherence issues, not to be used in a running cluster
 	 */
 	protected void scavengeFully() {
-		log.debug("SessionIdManager:scavengeFully");
-		for (String id : _sessions.keySet()) {
+		log.debug("MemcachedSessionIdManager#scavengeFully");
+		for (String id: _sessions.keySet()) {
+			SessionDataCache cache = _sessions.get(id);
+			if (cache == null) {
+				// cached record was disappeared during iteration. 
+				_sessions.remove(id);
+				continue;
+			}
+			if (cache.getAccessed() < 0) {
+				continue;
+			}
+			// refresh cached data and test again.
+			MemcachedSessionData data = memcachedGet(id);
+			if (data == null) {
+				// record was disappeared during iteration.
+				_sessions.remove(id);
+				continue;
+			}
+			if (data.getAccessed() < 0) {
+				continue;
+			}
+			log.debug("MemcachedSessionIdManager:scavenging valid " + id);
 			invalidateAll(id);
 		}
 	}
@@ -203,19 +237,33 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	 * 'valid=false'
 	 */
 	protected void purge() {
-		long threshold = System.currentTimeMillis() - _purgeInvalidAge;
+		log.debug("MemcachedSessionIdManager#purge:called with invalid age " + _purgeInvalidAge);
+
+		long t = System.currentTimeMillis() - _purgeInvalidAge;
 		for (String id : _sessions.keySet()) {
-			// check target from local cache.
 			SessionDataCache cache = _sessions.get(id);
-			if (cache != null && 0 <= cache.getAccessed() && cache.getInvalidated() < threshold) {
-				MemcachedSessionData data = memcachedGet(id);
-				if (data != null && 0 <= data.getAccessed() && data.getInvalidated() < threshold) {
-					if (!data.isValid()) {
-						log.debug("MemcachedSessionIdManager:purging invalid " + id);
-						memcachedDelete(id);
-						_sessions.remove(id);
-					}
-				}
+			if (cache == null) {
+				// cached record was disappeared during iteration. 
+				_sessions.remove(id);
+				continue;
+			}
+			if (cache.getInvalidated() < 0 || t < cache.getInvalidated()) {
+				continue;
+			}
+			// refresh cached data and test again.
+			MemcachedSessionData data = memcachedGet(id);
+			if (data == null) {
+				// record was disappeared during iteration.
+				_sessions.remove(id);
+				continue;
+			}
+			if (data.getInvalidated() < 0 || t < data.getInvalidated()) {
+				continue;
+			}
+			if (!data.isValid()) {
+				log.debug("MemcachedSessionIdManager:purging invalid " + id);
+				memcachedDelete(id);
+				_sessions.remove(id);
 			}
 		}
 	}
@@ -227,10 +275,32 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	 * 
 	 */
 	protected void purgeFully() {
+		log.debug("MemcachedSessionIdManager#purgeFully");
 		for (String id: _sessions.keySet()) {
-			log.debug("MemcachedSessionIdManager:purging invalid " + id);
-			memcachedDelete(id);
-			_sessions.remove(id);
+			SessionDataCache cache = _sessions.get(id);
+			if (cache == null) {
+				// cached record was disappeared during iteration. 
+				_sessions.remove(id);
+				continue;
+			}
+			if (cache.getInvalidated() < 0) {
+				continue;
+			}
+			// refresh cached data and test again.
+			MemcachedSessionData data = memcachedGet(id);
+			if (data == null) {
+				// record was disappeared during iteration.
+				_sessions.remove(id);
+				continue;
+			}
+			if (data.getInvalidated() < 0) {
+				continue;
+			}
+			if (!data.isValid()) {
+				log.debug("MemcachedSessionIdManager:purging invalid " + id);
+				memcachedDelete(id);
+				_sessions.remove(id);
+			}
 		}
 	}
 
@@ -413,7 +483,6 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	/* ------------------------------------------------------------ */
 	public void invalidateAll(String sessionId) {
 		_sessions.remove(sessionId);
-
 		// tell all contexts that may have a session object with this id to
 		// get rid of them
 		Handler[] contexts = _server.getChildHandlersByClass(ContextHandler.class);
@@ -422,21 +491,11 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 					.getChildHandlerByClass(SessionHandler.class);
 			if (sessionHandler != null) {
 				SessionManager manager = sessionHandler.getSessionManager();
-
-				if (manager != null
-						&& manager instanceof MemcachedSessionManager) {
-					((MemcachedSessionManager) manager)
-							.invalidateSession(sessionId);
+				if (manager != null && manager instanceof MemcachedSessionManager) {
+					((MemcachedSessionManager) manager).invalidateSession(sessionId);
 				}
 			}
 		}
-
-		SessionDataCache cache = _sessions.get(sessionId);
-		if (cache == null) {
-			cache = new SessionDataCache();
-		}
-		cache.setInvalidated(System.currentTimeMillis());
-		_sessions.put(sessionId, cache);
 	}
 
 	/* ------------------------------------------------------------ */
