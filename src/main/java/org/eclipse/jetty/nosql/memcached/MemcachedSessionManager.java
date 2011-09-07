@@ -69,10 +69,15 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 	 * org.eclipse.jetty.server.session.AbstractSessionManager#setSessionIdManager
 	 * (org.eclipse.jetty.server.SessionIdManager)
 	 */
-//	@Override
-//	public void setSessionIdManager(SessionIdManager idManager) {
-//		super.setSessionIdManager(idManager);
-//	}
+	@Override
+	public void setSessionIdManager(SessionIdManager idManager) {
+		try {
+			super.setSessionIdManager((MemcachedSessionIdManager) idManager);
+		} catch (ClassCastException error) {
+			__log.warn("unable to cast " + idManager.getClass() + " to " + MemcachedSessionIdManager.class.getClass() + ".");
+			throw(error);
+		}
+	}
 
 	/* ------------------------------------------------------------ */
 	@Override
