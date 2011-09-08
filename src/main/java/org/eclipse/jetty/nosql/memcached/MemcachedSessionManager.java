@@ -187,8 +187,8 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 			return null;
 		}
 
-		if (!_contextPath.equals(data.getContextPath())) {
-			log.warn("MemcachedSessionManager#loadSession: invalid context path (expected" + _contextPath + ", got:" + data.getContextPath());
+		if (!_contextPath.equals("*") && !_contextPath.equals(data.getContextPath())) {
+			log.warn("MemcachedSessionManager#loadSession: invalid context path (expected:" + _contextPath + ", got:" + data.getContextPath() + ")");
 			return null;
 		}
 
@@ -196,8 +196,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 			long version = data.getVersion();
 			long created = data.getCreationTime();
 			long accessed = data.getAccessed();
-			NoSqlSession session = new NoSqlSession(this, created, accessed,
-					clusterId, version);
+			NoSqlSession session = new NoSqlSession(this, created, accessed, clusterId, version);
 
 			// get the attributes for the context
 			Enumeration<String> attrs = data.getAttributeNames();
