@@ -236,6 +236,13 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 
 	/*------------------------------------------------------------ */
 	@Override
+	protected void invalidateSessions() throws Exception {
+		// do nothing.
+		// we do not want to invalidate all sessions on doStop().
+	}
+
+	/*------------------------------------------------------------ */
+	@Override
 	protected void invalidateSession(String idInCluster) {
 		log.debug("MemcachedSessionManager:invalidateSession:invalidating " + idInCluster);
 
