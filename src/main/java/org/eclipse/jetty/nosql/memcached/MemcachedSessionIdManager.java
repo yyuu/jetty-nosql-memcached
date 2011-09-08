@@ -176,7 +176,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 			if (data.getAccessed() < 0 || t < data.getAccessed()) {
 				continue;
 			}
-			log.debug("MemcachedSessionIdManager:scavenging valid " + id);
+			log.info("MemcachedSessionIdManager:scavenging valid " + id);
 			invalidateAll(id);
 		}
 	}
@@ -212,14 +212,14 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 			if (data.getAccessed() < 0) {
 				continue;
 			}
-			log.debug("MemcachedSessionIdManager:scavenging valid " + id);
+			log.info("MemcachedSessionIdManager:scavenging valid " + id);
 			invalidateAll(id);
 		}
 	}
 
 	/* ------------------------------------------------------------ */
 	/**
-	 * Purge is a process that cleans the mongodb cluster of old sessions that
+	 * Purge is a process that cleans the memcached cluster of old sessions that
 	 * are no longer valid.
 	 * 
 	 * There are two checks being done here:
@@ -261,7 +261,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 				continue;
 			}
 			if (!data.isValid()) {
-				log.debug("MemcachedSessionIdManager:purging invalid " + id);
+				log.info("MemcachedSessionIdManager:purging invalid " + id);
 				memcachedDelete(id);
 				_sessions.remove(id);
 			}
@@ -270,7 +270,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 
 	/* ------------------------------------------------------------ */
 	/**
-	 * Purge is a process that cleans the mongodb cluster of old sessions that
+	 * Purge is a process that cleans the memcached cluster of old sessions that
 	 * are no longer valid.
 	 * 
 	 */
@@ -297,7 +297,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 				continue;
 			}
 			if (!data.isValid()) {
-				log.debug("MemcachedSessionIdManager:purging invalid " + id);
+				log.info("MemcachedSessionIdManager:purging invalid " + id);
 				memcachedDelete(id);
 				_sessions.remove(id);
 			}
@@ -450,7 +450,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 
 	/* ------------------------------------------------------------ */
 	/**
-	 * is the session id known to mongo, and is it valid
+	 * is the session id known to memcached, and is it valid
 	 */
 	public boolean idInUse(String idInCluster) {
 		return ! memcachedAdd(idInCluster, new MemcachedSessionData(idInCluster));

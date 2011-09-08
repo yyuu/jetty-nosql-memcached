@@ -17,7 +17,6 @@ public class MemcachedSessionData implements Serializable {
 	public String _id = "";
 	public long _created = -1;
 	public long _accessed = -1;
-	public boolean _valid = true;
 	public long _invalidated = -1;
 	public long _version = 0;
 	public Map<String, Object> _attributes = new HashMap<String, Object>();
@@ -44,11 +43,11 @@ public class MemcachedSessionData implements Serializable {
 		this._id = session.getId();
 		this._created = session.getCreationTime();
 		this._accessed = session.getAccessed();
-		setValid(session.isValid());
 		for (Enumeration<String> e=session.getAttributeNames(); e.hasMoreElements();) {
 			String key = e.nextElement();
 			this._attributes.put(key, session.getAttribute(key));
 		}
+		setValid(session.isValid());
 	}
 
 	public String getId() {
@@ -108,23 +107,19 @@ public class MemcachedSessionData implements Serializable {
 				", created:" + getCreationTime() +
 				", accessed:" + getAccessed() +
 				", attributes:" + getAttributeMap() +
-				", valid:" + isValid() +
 				", invalidated:" + getInvalidated() +
 		"}";
 	}
 
 	public boolean isValid() {
-		return _valid;
+		return _invalidated < 0;
 	}
 
 	public void setValid(boolean valid) {
-		setValid(valid, System.currentTimeMillis());
-	}
-	
-	public void setValid(boolean valid, long invalidated) {
-		this._valid = valid;
-		if (!valid) {
-			setInvalidated(invalidated);
+		if (valid) {
+			setInvalidated(-1L);
+		} else {
+			setInvalidated(System.currentTimeMillis());
 		}
 	}
 

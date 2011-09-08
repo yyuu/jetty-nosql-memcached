@@ -71,16 +71,21 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 			if (session.isValid()) {
 				data = new MemcachedSessionData(session);
 			} else {
-				Log.warn("MemcachedSessionManager#save: discarding attributes of invalidated session: id=" + session.getId());
-				data = new MemcachedSessionData(session.getId(), session.getCreationTime());
-				data.setValid(false);
+				Log.warn("MemcachedSessionManager#save: try to recover attributes of invalidated session: id=" + session.getId());
+				data = memcachedGet(session.getId());
+				if (data == null) {
+					data = new MemcachedSessionData(session.getId(), session.getCreationTime());
+				}
+				if (data.isValid()) {
+					data.setValid(false);
+				}
 			}
 			data.setContextPath(_contextPath);
-			long newver = 1; // default version for new sessions
+			long longVersion = 1; // default version for new sessions
 			if (version != null) {
-				newver = ((Long) version).intValue() + 1;
+				longVersion = ((Long)version).longValue() + 1L;
 			}
-			data.setVersion(newver);
+			data.setVersion(longVersion);
 
 			boolean success = memcachedSet(session.getId(), data);
 			if (!success) {
@@ -92,7 +97,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 				session.didActivate();
 			}
 
-			return new Long(newver);
+			return new Long(longVersion);
 		} catch (Exception e) {
 			log.warn(e);
 		}
