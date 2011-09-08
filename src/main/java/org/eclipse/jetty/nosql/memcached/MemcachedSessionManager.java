@@ -37,10 +37,21 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 	public void doStart() throws Exception {
 		super.doStart();
 		if (_cookieDomain == null) {
-			this._cookieDomain = "*";
+			String[] cookieDomains = getContextHandler().getVirtualHosts();
+			if (cookieDomains == null || cookieDomains.length == 0) {
+				cookieDomains = getContextHandler().getConnectorNames();
+			}
+			if (cookieDomains == null || cookieDomains.length == 0) {
+				cookieDomains = new String[] { "*" };
+			}
+			this._cookieDomain = cookieDomains[0];
 		}
 		if (_cookiePath == null) {
-			this._cookiePath = "*";
+			String cookiePath = getContext().getContextPath();
+			if (cookiePath == null || "".equals(cookiePath)) {
+				cookiePath = "*";
+			}
+			this._cookiePath = cookiePath;
 		}
 	}
 
