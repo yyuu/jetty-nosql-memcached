@@ -65,8 +65,9 @@ public class MemcachedTestServer extends AbstractTestServer
                 e.printStackTrace();
             }
             
-            _idManager.setScavengeDelay(_scavengePeriod + 1000);
-            _idManager.setScavengePeriod(_maxInactivePeriod);       
+            _idManager.setScavengeDelay(_scavengePeriod * 1000);
+            _idManager.setScavengePeriod(_maxInactivePeriod);
+            _idManager.setWorkerName("node0");
             
             try
             {
