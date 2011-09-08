@@ -534,31 +534,38 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 		}
 		return data;
 	}
-
+	
 	protected boolean memcachedSet(String idInCluster, MemcachedSessionData data) {
+		return memcachedSet(idInCluster, data, _memcachedDefaultExpiry);
+	}
+
+	protected boolean memcachedSet(String idInCluster, MemcachedSessionData data, int expiry) {
 		boolean result = false;
 		try {
 			byte[] raw = MemcachedSessionData.pack(data);
-			Future<Boolean> f = getConnection().set(mangleKey(idInCluster), _memcachedDefaultExpiry, raw);
+			Future<Boolean> f = getConnection().set(mangleKey(idInCluster), expiry, raw);
 			result = f.get(_memcachedTimeoutInMs, TimeUnit.MILLISECONDS);
 		} catch (Exception error) {
 			log.warn("unable to set to memcached: id=" + idInCluster + ", data=" + data, error);
 		}
 		return result;
 	}
-	
+
 	protected boolean memcachedAdd(String idInCluster, MemcachedSessionData data) {
+		return memcachedAdd(idInCluster, data, _memcachedDefaultExpiry);
+	}
+
+	protected boolean memcachedAdd(String idInCluster, MemcachedSessionData data, int expiry) {
 		boolean result = false;
 		try {
 			byte[] raw = MemcachedSessionData.pack(data);
-			Future<Boolean> f = getConnection().add(mangleKey(idInCluster), _memcachedDefaultExpiry, raw);
+			Future<Boolean> f = getConnection().add(mangleKey(idInCluster), expiry, raw);
 			result = f.get(_memcachedTimeoutInMs, TimeUnit.MILLISECONDS);
 		} catch (Exception error) {
 			log.warn("unable to add to memcached: id=" + idInCluster + ", data=" + data, error);
 		}
 		return result;
 	}
-	
 
 	protected boolean memcachedDelete(String idInCluster) {
 		boolean result = false;
@@ -570,7 +577,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 		}
 		return result;
 	}
-	
+
 	protected Set<String> getSessions() {
 		return _sessions.keySet();
 	}

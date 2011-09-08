@@ -23,7 +23,9 @@ import org.eclipse.jetty.util.log.Logger;
 
 public class MemcachedSessionManager extends NoSqlSessionManager {
 	private final static Logger log = Log.getLogger("org.eclipse.jetty.nosql.memcached");
-	private String _contextPath = null;
+	private String _cookieDomain = getSessionCookieConfig().getDomain();
+	private String _cookiePath = getSessionCookieConfig().getPath();
+	private int _cookieMaxAge = getSessionCookieConfig().getMaxAge();
 
 	/* ------------------------------------------------------------ */
 	public MemcachedSessionManager() {
@@ -34,11 +36,12 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 	@Override
 	public void doStart() throws Exception {
 		super.doStart();
-		String contextPath = getContext().getContextPath();
-		if (contextPath == null || contextPath.length() == 0) {
-			contextPath = "*";
+		if (_cookieDomain == null) {
+			this._cookieDomain = "*";
 		}
-		this._contextPath = contextPath;
+		if (_cookiePath == null) {
+			this._cookiePath = "*";
+		}
 	}
 
 	/* ------------------------------------------------------------ */
@@ -80,7 +83,8 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 					data.setValid(false);
 				}
 			}
-			data.setContextPath(_contextPath);
+			data.setDomain(_cookieDomain);
+			data.setPath(_cookiePath);
 			long longVersion = 1; // default version for new sessions
 			if (version != null) {
 				longVersion = ((Long)version).longValue() + 1L;
@@ -186,9 +190,14 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 			log.warn("MemcachedSessionmanager#loadSession: invalid id (expected:" + clusterId + ", got:" + data.getId() + ")");
 			return null;
 		}
+		
+		if (!data.getDomain().equals("*") && !_cookieDomain.equals(data.getDomain())) {
+			log.warn("MemcachedSessionManager#loadSession: invalid cookie domain (expected:" + _cookieDomain + ", got:" + data.getDomain() + ")");
+			return null;
+		}
 
-		if (!data.getContextPath().equals("*") && !_contextPath.equals(data.getContextPath())) {
-			log.warn("MemcachedSessionManager#loadSession: invalid context (expected:" + _contextPath + ", got:" + data.getContextPath() + ")");
+		if (!data.getPath().equals("*") && !_cookiePath.equals(data.getPath())) {
+			log.warn("MemcachedSessionManager#loadSession: invalid cookie path (expected:" + _cookiePath + ", got:" + data.getPath() + ")");
 			return null;
 		}
 
@@ -224,8 +233,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 	/*------------------------------------------------------------ */
 	@Override
 	protected boolean remove(NoSqlSession session) {
-		log.debug("MemcachedSessionManager:remove:session "
-				+ session.getClusterId());
+		log.debug("MemcachedSessionManager:remove:session " + session.getClusterId());
 
 		/*
 		 * Check if the session exists and if it does remove the context
@@ -299,11 +307,23 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 	}
 
 	protected boolean memcachedSet(String idInCluster, MemcachedSessionData data) {
-		return ((MemcachedSessionIdManager)_sessionIdManager).memcachedSet(mangleKey(idInCluster), data);
+		if (_cookieMaxAge < 0) {
+			// use idManager's default expiry if _cookieMaxAge is negative. (expiry must not be negative)
+			return ((MemcachedSessionIdManager)_sessionIdManager).memcachedSet(mangleKey(idInCluster), data);
+		} else {
+			int expiry = _cookieMaxAge * 2;
+			return ((MemcachedSessionIdManager)_sessionIdManager).memcachedSet(mangleKey(idInCluster), data, expiry);
+		}
 	}
 
 	protected boolean memcachedAdd(String idInCluster, MemcachedSessionData data) {
-		return ((MemcachedSessionIdManager)_sessionIdManager).memcachedAdd(mangleKey(idInCluster), data);
+		if (_cookieMaxAge < 0) {
+			// use idManager's default expiry if _cookieMaxAge is negative. (expiry must not be negative)
+			return ((MemcachedSessionIdManager)_sessionIdManager).memcachedAdd(mangleKey(idInCluster), data);
+		} else {
+			int expiry = _cookieMaxAge * 2;
+			return ((MemcachedSessionIdManager)_sessionIdManager).memcachedAdd(mangleKey(idInCluster), data, expiry);
+		}
 	}
 
 	protected boolean memcachedDelete(String idInCluster) {
