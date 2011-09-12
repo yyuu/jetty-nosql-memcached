@@ -68,7 +68,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 		try {
 			super.setSessionIdManager((MemcachedSessionIdManager) idManager);
 		} catch (ClassCastException error) {
-			log.warn("unable to cast " + idManager.getClass() + " to " + MemcachedSessionIdManager.class.getClass() + ".");
+			log.warn("unable to cast " + idManager.getClass() + " to " + MemcachedSessionIdManager.class + ".");
 			throw(error);
 		}
 	}
@@ -86,7 +86,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 				data = new MemcachedSessionData(session);
 			} else {
 				Log.warn("MemcachedSessionManager#save: try to recover attributes of invalidated session: id=" + session.getId());
-				data = memcachedGet(session.getId());
+				data = getKey(session.getId());
 				if (data == null) {
 					data = new MemcachedSessionData(session.getId(), session.getCreationTime());
 				}
@@ -102,7 +102,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 			}
 			data.setVersion(longVersion);
 
-			boolean success = memcachedSet(session.getId(), data);
+			boolean success = setKey(session.getId(), data);
 			if (!success) {
 				throw(new RuntimeException("unable to set data on memcached: data=" + data));
 			}
@@ -126,7 +126,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 
 		// check if our in memory version is the same as what is on the disk
 		if (version != null) {
-			MemcachedSessionData data = memcachedGet(session.getClusterId());
+			MemcachedSessionData data = getKey(session.getClusterId());
 			long saved = 0;
 			if (data != null) {
 				saved = data.getVersion();
@@ -140,7 +140,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 		}
 
 		// If we are here, we have to load the object
-		MemcachedSessionData data = memcachedGet(session.getClusterId());
+		MemcachedSessionData data = getKey(session.getClusterId());
 
 		// If it doesn't exist, invalidate
 		if (data == null) {
@@ -184,7 +184,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 	/*------------------------------------------------------------ */
 	@Override
 	protected synchronized NoSqlSession loadSession(String clusterId) {
-		MemcachedSessionData data = memcachedGet(clusterId);
+		MemcachedSessionData data = getKey(clusterId);
 
 		log.debug("MemcachedSessionManager:loaded " + data);
 
@@ -250,7 +250,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 		 * Check if the session exists and if it does remove the context
 		 * associated with this session
 		 */
-		return memcachedDelete(session.getClusterId());
+		return deleteKey(session.getClusterId());
 	}
 
 	/*------------------------------------------------------------ */
@@ -271,11 +271,11 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 		 * pull back the 'valid' value, we can check if its false, if is we
 		 * don't need to reset it to false
 		 */
-		MemcachedSessionData data = memcachedGet(idInCluster);
+		MemcachedSessionData data = getKey(idInCluster);
 
 		if (data != null && data.isValid()) {
 			data.setValid(false);
-			boolean success = memcachedSet(idInCluster, data);
+			boolean success = setKey(idInCluster, data);
 			if (!success) {
 				throw(new RuntimeException("unable to set data on memcached: data=" + data));
 			}
@@ -313,31 +313,31 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 		return idInCluster;
 	}
 
-	protected MemcachedSessionData memcachedGet(String idInCluster) {
-		return ((MemcachedSessionIdManager)_sessionIdManager).memcachedGet(mangleKey(idInCluster));
+	protected MemcachedSessionData getKey(String idInCluster) {
+		return ((MemcachedSessionIdManager)_sessionIdManager).getKey(mangleKey(idInCluster));
 	}
 
-	protected boolean memcachedSet(String idInCluster, MemcachedSessionData data) {
+	protected boolean setKey(String idInCluster, MemcachedSessionData data) {
 		if (_cookieMaxAge < 0) {
 			// use idManager's default expiry if _cookieMaxAge is negative. (expiry must not be negative)
-			return ((MemcachedSessionIdManager)_sessionIdManager).memcachedSet(mangleKey(idInCluster), data);
+			return ((MemcachedSessionIdManager)_sessionIdManager).setKey(mangleKey(idInCluster), data);
 		} else {
 			int expiry = _cookieMaxAge * 2;
-			return ((MemcachedSessionIdManager)_sessionIdManager).memcachedSet(mangleKey(idInCluster), data, expiry);
+			return ((MemcachedSessionIdManager)_sessionIdManager).setKey(mangleKey(idInCluster), data, expiry);
 		}
 	}
 
-	protected boolean memcachedAdd(String idInCluster, MemcachedSessionData data) {
+	protected boolean addKey(String idInCluster, MemcachedSessionData data) {
 		if (_cookieMaxAge < 0) {
 			// use idManager's default expiry if _cookieMaxAge is negative. (expiry must not be negative)
-			return ((MemcachedSessionIdManager)_sessionIdManager).memcachedAdd(mangleKey(idInCluster), data);
+			return ((MemcachedSessionIdManager)_sessionIdManager).addKey(mangleKey(idInCluster), data);
 		} else {
 			int expiry = _cookieMaxAge * 2;
-			return ((MemcachedSessionIdManager)_sessionIdManager).memcachedAdd(mangleKey(idInCluster), data, expiry);
+			return ((MemcachedSessionIdManager)_sessionIdManager).addKey(mangleKey(idInCluster), data, expiry);
 		}
 	}
 
-	protected boolean memcachedDelete(String idInCluster) {
-		return ((MemcachedSessionIdManager)_sessionIdManager).memcachedDelete(mangleKey(idInCluster));
+	protected boolean deleteKey(String idInCluster) {
+		return ((MemcachedSessionIdManager)_sessionIdManager).deleteKey(mangleKey(idInCluster));
 	}
 }

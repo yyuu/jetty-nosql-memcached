@@ -88,8 +88,8 @@ public class MemcachedTestServer extends AbstractTestServer
             
             _idManager.setScavengeDelay((int)TimeUnit.SECONDS.toMillis(_scavengePeriod));
             _idManager.setScavengePeriod(_maxInactivePeriod);
-            _idManager.setMemcachedDefaultExpiry(300);
-            _idManager.setMemcachedKeyPrefix("MemcachedTestServer::");
+            _idManager.setDefaultExpiry(300);
+            _idManager.setKeyPrefix("MemcachedTestServer::");
             
             return _idManager;
         }

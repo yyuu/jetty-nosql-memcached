@@ -76,7 +76,7 @@ public class MemcachedSessionData implements Serializable {
 	}
 
 	public synchronized Map<String, Object> getAttributeMap() {
-		return _attributes;
+		return Collections.unmodifiableMap(_attributes);
 	}
 
 	public synchronized void setAttributeMap(Map<String, Object> attributes) {

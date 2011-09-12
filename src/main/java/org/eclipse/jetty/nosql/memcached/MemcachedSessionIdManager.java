@@ -119,11 +119,11 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 		}
 	}
 
-	private String _memcachedServerString = "127.0.0.1:11211";
-	private int _memcachedDefaultExpiry = 0; // never expire
-	private int _memcachedTimeoutInMs = 1000;
-	private String _memcachedKeyPrefix = "";
-	private String _memcachedKeySuffix = "";
+	private String _serverString = "127.0.0.1:11211";
+	private int _defaultExpiry = 0; // never expire
+	private int _timeoutInMs = 1000;
+	private String _keyPrefix = "";
+	private String _keySuffix = "";
 
 	/* ------------------------------------------------------------ */
 	public MemcachedSessionIdManager(Server server) throws IOException {
@@ -134,7 +134,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	public MemcachedSessionIdManager(Server server, String serverString) throws IOException {
 		super(new Random());
 		this._server = server;
-		this._memcachedServerString = serverString;
+		this._serverString = serverString;
 	}
 
 	/* ------------------------------------------------------------ */
@@ -167,7 +167,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 				continue;
 			}
 			// refresh cached data and test again.
-			MemcachedSessionData data = memcachedGet(id);
+			MemcachedSessionData data = getKey(id);
 			if (data == null) {
 				// record was disappeared during iteration.
 				_sessions.remove(id);
@@ -203,7 +203,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 				continue;
 			}
 			// refresh cached data and test again.
-			MemcachedSessionData data = memcachedGet(id);
+			MemcachedSessionData data = getKey(id);
 			if (data == null) {
 				// record was disappeared during iteration.
 				_sessions.remove(id);
@@ -251,7 +251,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 				continue;
 			}
 			// refresh cached data and test again.
-			MemcachedSessionData data = memcachedGet(id);
+			MemcachedSessionData data = getKey(id);
 			if (data == null) {
 				// record was disappeared during iteration.
 				_sessions.remove(id);
@@ -262,7 +262,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 			}
 			if (!data.isValid()) {
 				log.info("MemcachedSessionIdManager:purging invalid " + id);
-				memcachedDelete(id);
+				deleteKey(id);
 				_sessions.remove(id);
 			}
 		}
@@ -287,7 +287,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 				continue;
 			}
 			// refresh cached data and test again.
-			MemcachedSessionData data = memcachedGet(id);
+			MemcachedSessionData data = getKey(id);
 			if (data == null) {
 				// record was disappeared during iteration.
 				_sessions.remove(id);
@@ -298,7 +298,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 			}
 			if (!data.isValid()) {
 				log.info("MemcachedSessionIdManager:purging invalid " + id);
-				memcachedDelete(id);
+				deleteKey(id);
 				_sessions.remove(id);
 			}
 		}
@@ -308,9 +308,9 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	public MemcachedClient getConnection() {
 		if (_connection == null || !_connection.isAlive()) {
 			try {
-				this._connection = new MemcachedClient(AddrUtil.getAddresses(_memcachedServerString));
+				this._connection = new MemcachedClient(AddrUtil.getAddresses(_serverString));
 			} catch (IOException error) {
-				log.warn("MemcachedSessionIdManager:getConnection: unable to establish connection to " + _memcachedServerString);
+				log.warn("MemcachedSessionIdManager:getConnection: unable to establish connection to " + _serverString);
 			}
 		}
 		return _connection;
@@ -453,7 +453,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	 * is the session id known to memcached, and is it valid
 	 */
 	public boolean idInUse(String idInCluster) {
-		return ! memcachedAdd(idInCluster, new MemcachedSessionData(idInCluster));
+		return ! addKey(idInCluster, new MemcachedSessionData(idInCluster));
 	}
 
 	/* ------------------------------------------------------------ */
@@ -519,15 +519,14 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	}
 	
 	protected String mangleKey(String key) {
-		return _memcachedKeyPrefix + key + _memcachedKeySuffix;
+		return _keyPrefix + key + _keySuffix;
 	}
 
-	protected MemcachedSessionData memcachedGet(String idInCluster) {
+	protected MemcachedSessionData getKey(String idInCluster) {
 		MemcachedSessionData data = null;
 		try {
 			Future<Object> f = getConnection().asyncGet(mangleKey(idInCluster));
-			byte[] raw = (byte[]) f.get(_memcachedTimeoutInMs,
-					TimeUnit.MILLISECONDS);
+			byte[] raw = (byte[]) f.get(_timeoutInMs, TimeUnit.MILLISECONDS);
 			data = MemcachedSessionData.unpack(raw);
 		} catch (Exception error) {
 			log.warn("unable to get from memcached: id=" + idInCluster, error);
@@ -535,43 +534,43 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 		return data;
 	}
 	
-	protected boolean memcachedSet(String idInCluster, MemcachedSessionData data) {
-		return memcachedSet(idInCluster, data, _memcachedDefaultExpiry);
+	protected boolean setKey(String idInCluster, MemcachedSessionData data) {
+		return setKey(idInCluster, data, _defaultExpiry);
 	}
 
-	protected boolean memcachedSet(String idInCluster, MemcachedSessionData data, int expiry) {
+	protected boolean setKey(String idInCluster, MemcachedSessionData data, int expiry) {
 		boolean result = false;
 		try {
 			byte[] raw = MemcachedSessionData.pack(data);
 			Future<Boolean> f = getConnection().set(mangleKey(idInCluster), expiry, raw);
-			result = f.get(_memcachedTimeoutInMs, TimeUnit.MILLISECONDS);
+			result = f.get(_timeoutInMs, TimeUnit.MILLISECONDS);
 		} catch (Exception error) {
 			log.warn("unable to set to memcached: id=" + idInCluster + ", data=" + data, error);
 		}
 		return result;
 	}
 
-	protected boolean memcachedAdd(String idInCluster, MemcachedSessionData data) {
-		return memcachedAdd(idInCluster, data, _memcachedDefaultExpiry);
+	protected boolean addKey(String idInCluster, MemcachedSessionData data) {
+		return addKey(idInCluster, data, _defaultExpiry);
 	}
 
-	protected boolean memcachedAdd(String idInCluster, MemcachedSessionData data, int expiry) {
+	protected boolean addKey(String idInCluster, MemcachedSessionData data, int expiry) {
 		boolean result = false;
 		try {
 			byte[] raw = MemcachedSessionData.pack(data);
 			Future<Boolean> f = getConnection().add(mangleKey(idInCluster), expiry, raw);
-			result = f.get(_memcachedTimeoutInMs, TimeUnit.MILLISECONDS);
+			result = f.get(_timeoutInMs, TimeUnit.MILLISECONDS);
 		} catch (Exception error) {
 			log.warn("unable to add to memcached: id=" + idInCluster + ", data=" + data, error);
 		}
 		return result;
 	}
 
-	protected boolean memcachedDelete(String idInCluster) {
+	protected boolean deleteKey(String idInCluster) {
 		boolean result = false;
 		try {
 			Future<Boolean> f = getConnection().delete(mangleKey(idInCluster));
-			result = f.get(_memcachedTimeoutInMs, TimeUnit.MILLISECONDS);
+			result = f.get(_timeoutInMs, TimeUnit.MILLISECONDS);
 		} catch (Exception error) {
 			log.warn("unable to delete from memcached: id=" + idInCluster, error);
 		}
@@ -582,44 +581,44 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 		return _sessions.keySet();
 	}
 	
-	public String getMemcachedServerString() {
-		return _memcachedServerString;
+	public String getServerString() {
+		return _serverString;
 	}
 
-	public void setMemcachedServerString(String memcachedServerString) {
-		this._memcachedServerString = memcachedServerString;
+	public void setServerString(String serverString) {
+		this._serverString = serverString;
 	}
 
-	public int getMemcachedDefaultExpiry() {
-		return _memcachedDefaultExpiry;
+	public int getDefaultExpiry() {
+		return _defaultExpiry;
 	}
 
-	public void setMemcachedDefaultExpiry(int memcachedDefaultExpiry) {
-		this._memcachedDefaultExpiry = memcachedDefaultExpiry;
+	public void setDefaultExpiry(int defaultExpiry) {
+		this._defaultExpiry = defaultExpiry;
 	}
 
 	public int getMemcachedTimeoutInMs() {
-		return _memcachedTimeoutInMs;
+		return _timeoutInMs;
 	}
 
-	public void setMemcachedTimeoutInMs(int memcachedTimeoutInMs) {
-		this._memcachedTimeoutInMs = memcachedTimeoutInMs;
+	public void setTimeoutInMs(int timeoutInMs) {
+		this._timeoutInMs = timeoutInMs;
 	}
 
-	public String getMemcachedKeyPrefix() {
-		return _memcachedKeyPrefix;
+	public String getKeyPrefix() {
+		return _keyPrefix;
 	}
 
-	public void setMemcachedKeyPrefix(String memcachedKeyPrefix) {
-		this._memcachedKeyPrefix = memcachedKeyPrefix;
+	public void setKeyPrefix(String keyPrefix) {
+		this._keyPrefix = keyPrefix;
 	}
 
-	public String getMemcachedKeySuffix() {
-		return _memcachedKeySuffix;
+	public String getKeySuffix() {
+		return _keySuffix;
 	}
 
-	public void setMemcachedKeySuffix(String memcachedKeySuffix) {
-		this._memcachedKeySuffix = memcachedKeySuffix;
+	public void setKeySuffix(String keySuffix) {
+		this._keySuffix = keySuffix;
 	}
 
 }
