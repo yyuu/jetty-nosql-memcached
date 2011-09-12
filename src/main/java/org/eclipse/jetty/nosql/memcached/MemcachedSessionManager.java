@@ -68,7 +68,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 		try {
 			super.setSessionIdManager((MemcachedSessionIdManager) idManager);
 		} catch (ClassCastException error) {
-			log.warn("" + getClass().getSimpleName() + ": unable to cast " + idManager.getClass() + " to " + MemcachedSessionIdManager.class + ".");
+			log.warn("unable to cast " + idManager.getClass() + " to " + MemcachedSessionIdManager.class + ".");
 			throw(error);
 		}
 	}
@@ -104,7 +104,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 
 			boolean success = setKey(session.getId(), data);
 			if (!success) {
-				throw(new RuntimeException("unable to set data on memcached: data=" + data));
+				throw(new RuntimeException("unable to set key: data=" + data));
 			}
 			log.debug("save:db.sessions.update(" + session.getId() + "," + data + ")");
 
@@ -277,7 +277,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 			data.setValid(false);
 			boolean success = setKey(idInCluster, data);
 			if (!success) {
-				throw(new RuntimeException("unable to set data on memcached: data=" + data));
+				throw(new RuntimeException("unable to set key: data=" + data));
 			}
 		}
 	}

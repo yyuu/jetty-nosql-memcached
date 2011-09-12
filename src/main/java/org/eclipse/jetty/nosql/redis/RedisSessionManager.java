@@ -24,7 +24,7 @@ import org.eclipse.jetty.util.log.Logger;
 import org.eclipse.jetty.nosql.memcached.MemcachedSessionData;
 
 public class RedisSessionManager extends NoSqlSessionManager {
-	private final static Logger log = Log.getLogger("org.eclipse.jetty.nosql.redis");
+	private final static Logger log = Log.getLogger("org.eclipse.jetty.nosql.redis.RedisSessionManager");
 	private String _cookieDomain = getSessionCookieConfig().getDomain();
 	private String _cookiePath = getSessionCookieConfig().getPath();
 	private int _cookieMaxAge = getSessionCookieConfig().getMaxAge();
@@ -80,14 +80,14 @@ public class RedisSessionManager extends NoSqlSessionManager {
 	protected synchronized Object save(NoSqlSession session, Object version,
 			boolean activateAfterSave) {
 		try {
-			log.debug("MemcachedSessionManager:save:" + session);
+			log.debug("save:" + session);
 			session.willPassivate();
 
 			MemcachedSessionData data = null;
 			if (session.isValid()) {
 				data = new MemcachedSessionData(session);
 			} else {
-				Log.warn("MemcachedSessionManager#save: try to recover attributes of invalidated session: id=" + session.getId());
+				Log.warn("save: try to recover attributes of invalidated session: id=" + session.getId());
 				data = getKey(session.getId());
 				if (data == null) {
 					data = new MemcachedSessionData(session.getId(), session.getCreationTime());
@@ -106,9 +106,9 @@ public class RedisSessionManager extends NoSqlSessionManager {
 
 			boolean success = setKey(session.getId(), data);
 			if (!success) {
-				throw(new RuntimeException("unable to set data on redis: data=" + data));
+				throw(new RuntimeException("unable to set key: data=" + data));
 			}
-			log.debug("MemcachedSessionManager:save:db.sessions.update(" + session.getId() + "," + data + ")");
+			log.debug("save:db.sessions.update(" + session.getId() + "," + data + ")");
 
 			if (activateAfterSave) {
 				session.didActivate();
@@ -124,7 +124,7 @@ public class RedisSessionManager extends NoSqlSessionManager {
 	/*------------------------------------------------------------ */
 	@Override
 	protected Object refresh(NoSqlSession session, Object version) {
-		log.debug("MemcachedSessionManager:refresh " + session);
+		log.debug("refresh " + session);
 
 		// check if our in memory version is the same as what is on the disk
 		if (version != null) {
@@ -134,7 +134,7 @@ public class RedisSessionManager extends NoSqlSessionManager {
 				saved = data.getVersion();
 
 				if (saved == ((Long) version).longValue()) {
-					log.debug("MemcachedSessionManager:refresh not needed");
+					log.debug("refresh not needed");
 					return version;
 				}
 				version = new Long(saved);
@@ -146,7 +146,7 @@ public class RedisSessionManager extends NoSqlSessionManager {
 
 		// If it doesn't exist, invalidate
 		if (data == null) {
-			log.debug("MemcachedSessionManager:refresh:marking invalid, no object");
+			log.debug("refresh:marking invalid, no object");
 			session.invalidate();
 			return null;
 		}
@@ -154,7 +154,7 @@ public class RedisSessionManager extends NoSqlSessionManager {
 		// If it has been flagged invalid, invalidate
 		boolean valid = data.isValid();
 		if (!valid) {
-			log.debug("MemcachedSessionManager:refresh:marking invalid, valid flag "
+			log.debug("refresh:marking invalid, valid flag "
 					+ valid);
 			session.invalidate();
 			return null;
@@ -188,7 +188,7 @@ public class RedisSessionManager extends NoSqlSessionManager {
 	protected synchronized NoSqlSession loadSession(String clusterId) {
 		MemcachedSessionData data = getKey(clusterId);
 
-		log.debug("MemcachedSessionManager:loaded " + data);
+		log.debug("loaded " + data);
 
 		if (data == null) {
 			return null;
@@ -200,17 +200,17 @@ public class RedisSessionManager extends NoSqlSessionManager {
 		}
 
 		if (!clusterId.equals(data.getId())) {
-			log.warn("MemcachedSessionmanager#loadSession: invalid id (expected:" + clusterId + ", got:" + data.getId() + ")");
+			log.warn("loadSession: invalid id (expected:" + clusterId + ", got:" + data.getId() + ")");
 			return null;
 		}
 		
 		if (!data.getDomain().equals("*") && !_cookieDomain.equals(data.getDomain())) {
-			log.warn("MemcachedSessionManager#loadSession: invalid cookie domain (expected:" + _cookieDomain + ", got:" + data.getDomain() + ")");
+			log.warn("loadSession: invalid cookie domain (expected:" + _cookieDomain + ", got:" + data.getDomain() + ")");
 			return null;
 		}
 
 		if (!data.getPath().equals("*") && !_cookiePath.equals(data.getPath())) {
-			log.warn("MemcachedSessionManager#loadSession: invalid cookie path (expected:" + _cookiePath + ", got:" + data.getPath() + ")");
+			log.warn("loadSession: invalid cookie path (expected:" + _cookiePath + ", got:" + data.getPath() + ")");
 			return null;
 		}
 
@@ -223,7 +223,7 @@ public class RedisSessionManager extends NoSqlSessionManager {
 			// get the attributes for the context
 			Enumeration<String> attrs = data.getAttributeNames();
 
-//			log.debug("MemcachedSessionManager:attrs: " + Collections.list(attrs));
+//			log.debug("attrs: " + Collections.list(attrs));
 			if (attrs != null) {
 				while (attrs.hasMoreElements()) {
 					String name = attrs.nextElement();
@@ -246,7 +246,7 @@ public class RedisSessionManager extends NoSqlSessionManager {
 	/*------------------------------------------------------------ */
 	@Override
 	protected boolean remove(NoSqlSession session) {
-		log.debug("MemcachedSessionManager:remove:session " + session.getClusterId());
+		log.debug("remove:session " + session.getClusterId());
 
 		/*
 		 * Check if the session exists and if it does remove the context
@@ -265,7 +265,7 @@ public class RedisSessionManager extends NoSqlSessionManager {
 	/*------------------------------------------------------------ */
 	@Override
 	protected void invalidateSession(String idInCluster) {
-		log.debug("MemcachedSessionManager:invalidateSession:invalidating " + idInCluster);
+		log.debug("invalidateSession:invalidating " + idInCluster);
 
 		super.invalidateSession(idInCluster);
 
@@ -279,7 +279,7 @@ public class RedisSessionManager extends NoSqlSessionManager {
 			data.setValid(false);
 			boolean success = setKey(idInCluster, data);
 			if (!success) {
-				throw(new RuntimeException("unable to set data on redis: data=" + data));
+				throw(new RuntimeException("unable to set key: data=" + data));
 			}
 		}
 	}

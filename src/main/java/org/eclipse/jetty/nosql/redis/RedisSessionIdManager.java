@@ -58,7 +58,7 @@ import redis.clients.jedis.ShardedJedis;
  * unvalidated atm)
  */
 public class RedisSessionIdManager extends AbstractSessionIdManager {
-	private final static Logger log = Log.getLogger("org.eclipse.jetty.nosql.redis");
+	private final static Logger log = Log.getLogger("org.eclipse.jetty.nosql.redis.RedisSessionIdManager");
 
 	private ShardedJedis _connection;
 	protected Server _server;
@@ -146,7 +146,7 @@ public class RedisSessionIdManager extends AbstractSessionIdManager {
 	 * point of expiration.
 	 */
 	protected void scavenge() {
-		log.debug("SessionIdManager#scavenge:called with delay" + _scavengeDelay);
+		log.debug("scavenge:called with delay" + _scavengeDelay);
 
 		/*
 		 * run a query returning results that: - are in the known list of
@@ -178,7 +178,7 @@ public class RedisSessionIdManager extends AbstractSessionIdManager {
 			if (data.getAccessed() < 0 || t < data.getAccessed()) {
 				continue;
 			}
-			log.info("MemcachedSessionIdManager:scavenging valid " + id);
+			log.info("scavenging valid " + id);
 			invalidateAll(id);
 		}
 	}
@@ -193,7 +193,7 @@ public class RedisSessionIdManager extends AbstractSessionIdManager {
 	 * coherence issues, not to be used in a running cluster
 	 */
 	protected void scavengeFully() {
-		log.debug("MemcachedSessionIdManager#scavengeFully");
+		log.debug("scavengeFully");
 		for (String id: _sessions.keySet()) {
 			SessionDataCache cache = _sessions.get(id);
 			if (cache == null) {
@@ -214,7 +214,7 @@ public class RedisSessionIdManager extends AbstractSessionIdManager {
 			if (data.getAccessed() < 0) {
 				continue;
 			}
-			log.info("MemcachedSessionIdManager:scavenging valid " + id);
+			log.info("scavenging valid " + id);
 			invalidateAll(id);
 		}
 	}
@@ -239,7 +239,7 @@ public class RedisSessionIdManager extends AbstractSessionIdManager {
 	 * 'valid=false'
 	 */
 	protected void purge() {
-		log.debug("MemcachedSessionIdManager#purge:called with invalid age " + _purgeInvalidAge);
+		log.debug("purge:called with invalid age " + _purgeInvalidAge);
 
 		long t = System.currentTimeMillis() - _purgeInvalidAge;
 		for (String id : _sessions.keySet()) {
@@ -263,7 +263,7 @@ public class RedisSessionIdManager extends AbstractSessionIdManager {
 				continue;
 			}
 			if (!data.isValid()) {
-				log.info("MemcachedSessionIdManager:purging invalid " + id);
+				log.info("purging invalid " + id);
 				deleteKey(id);
 				_sessions.remove(id);
 			}
@@ -277,7 +277,7 @@ public class RedisSessionIdManager extends AbstractSessionIdManager {
 	 * 
 	 */
 	protected void purgeFully() {
-		log.debug("MemcachedSessionIdManager#purgeFully");
+		log.debug("purgeFully");
 		for (String id: _sessions.keySet()) {
 			SessionDataCache cache = _sessions.get(id);
 			if (cache == null) {
@@ -299,7 +299,7 @@ public class RedisSessionIdManager extends AbstractSessionIdManager {
 				continue;
 			}
 			if (!data.isValid()) {
-				log.info("MemcachedSessionIdManager:purging invalid " + id);
+				log.info("purging invalid " + id);
 				deleteKey(id);
 				_sessions.remove(id);
 			}
@@ -379,13 +379,13 @@ public class RedisSessionIdManager extends AbstractSessionIdManager {
 	/* ------------------------------------------------------------ */
 	@Override
 	protected void doStart() throws Exception {
-		log.debug("MemcachedSessionIdManager:starting");
+		log.debug("starting");
 
 		/*
 		 * setup the scavenger thread
 		 */
 		if (_scavengeDelay > 0) {
-			_scavengeTimer = new Timer("MemcachedSessionIdScavenger", true);
+			_scavengeTimer = new Timer(getClass().getSimpleName().toString() + "#scavenger", true);
 
 			synchronized (this) {
 				if (_scavengerTask != null) {
@@ -399,8 +399,7 @@ public class RedisSessionIdManager extends AbstractSessionIdManager {
 					}
 				};
 
-				_scavengeTimer.schedule(_scavengerTask, _scavengeDelay,
-						_scavengePeriod);
+				_scavengeTimer.schedule(_scavengerTask, _scavengeDelay, _scavengePeriod);
 			}
 		}
 
@@ -408,7 +407,7 @@ public class RedisSessionIdManager extends AbstractSessionIdManager {
 		 * if purging is enabled, setup the purge thread
 		 */
 		if (_purge) {
-			_purgeTimer = new Timer("MemcachedSessionIdPurger", true);
+			_purgeTimer = new Timer(getClass().getSimpleName().toString() + "#purger", true);
 
 			synchronized (this) {
 				if (_purgeTask != null) {
@@ -460,7 +459,7 @@ public class RedisSessionIdManager extends AbstractSessionIdManager {
 			return;
 		}
 
-		log.debug("MemcachedSessionIdManager:addSession:" + session.getId());
+		log.debug("addSession:" + session.getId());
 
 		SessionDataCache cache = _sessions.get(session.getId());
 		if (cache == null) {
@@ -528,7 +527,7 @@ public class RedisSessionIdManager extends AbstractSessionIdManager {
 			byte[] raw = conn.get(mangleKey(idInCluster).getBytes());
 			data = MemcachedSessionData.unpack(raw);
 		} catch (Exception error) {
-			log.warn("unable to get from redis: id=" + idInCluster, error);
+			log.warn("unable to get key: id=" + idInCluster, error);
 //		} finally {
 //			if (conn != null) {
 //				conn.disconnect();
@@ -550,7 +549,7 @@ public class RedisSessionIdManager extends AbstractSessionIdManager {
 			String f = conn.setex(mangleKey(idInCluster).getBytes(), expiry, raw);
 			result = "OK".equals(f);
 		} catch (Exception error) {
-			log.warn("unable to set to redis: id=" + idInCluster + ", data=" + data, error);
+			log.warn("unable to set key: id=" + idInCluster + ", data=" + data, error);
 //		} finally {
 //			if (conn != null) {
 //				conn.disconnect();
@@ -572,7 +571,7 @@ public class RedisSessionIdManager extends AbstractSessionIdManager {
 			long f = conn.setnx(mangleKey(idInCluster).getBytes(), raw);
 			result = f == 1;
 		} catch (Exception error) {
-			log.warn("unable to add to redis: id=" + idInCluster + ", data=" + data, error);
+			log.warn("unable to add key: id=" + idInCluster + ", data=" + data, error);
 //		} finally {
 //			if (conn != null) {
 //				conn.disconnect();
@@ -589,7 +588,7 @@ public class RedisSessionIdManager extends AbstractSessionIdManager {
 			long f = conn.del(mangleKey(idInCluster));
 			result = f == 1;
 		} catch (Exception error) {
-			log.warn("unable to delete from redis: id=" + idInCluster, error);
+			log.warn("unable to delete key: id=" + idInCluster, error);
 //		} finally {
 //			if (conn != null) {
 //				conn.disconnect();
@@ -624,8 +623,8 @@ public class RedisSessionIdManager extends AbstractSessionIdManager {
 		return _defaultExpiry;
 	}
 
-	public void setDefaultExpiry(int memcachedDefaultExpiry) {
-		this._defaultExpiry = memcachedDefaultExpiry;
+	public void setDefaultExpiry(int defaultExpiry) {
+		this._defaultExpiry = defaultExpiry;
 	}
 
 	public int getTimeoutInMs() {

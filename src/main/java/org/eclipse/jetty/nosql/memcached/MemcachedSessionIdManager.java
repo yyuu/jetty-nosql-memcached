@@ -528,7 +528,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 			byte[] raw = (byte[]) f.get(_timeoutInMs, TimeUnit.MILLISECONDS);
 			data = MemcachedSessionData.unpack(raw);
 		} catch (Exception error) {
-			log.warn("" + getClass().getSimpleName() + ": unable to get from memcached: id=" + idInCluster, error);
+			log.warn("unable to get key: id=" + idInCluster, error);
 		}
 		return data;
 	}
@@ -544,7 +544,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 			Future<Boolean> f = getConnection().set(mangleKey(idInCluster), expiry, raw);
 			result = f.get(_timeoutInMs, TimeUnit.MILLISECONDS);
 		} catch (Exception error) {
-			log.warn("" + getClass().getSimpleName() + ": unable to set to memcached: id=" + idInCluster + ", data=" + data, error);
+			log.warn("unable to set key: id=" + idInCluster + ", data=" + data, error);
 		}
 		return result;
 	}
@@ -560,7 +560,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 			Future<Boolean> f = getConnection().add(mangleKey(idInCluster), expiry, raw);
 			result = f.get(_timeoutInMs, TimeUnit.MILLISECONDS);
 		} catch (Exception error) {
-			log.warn("" + getClass().getSimpleName() + ": unable to add to memcached: id=" + idInCluster + ", data=" + data, error);
+			log.warn("unable to add key: id=" + idInCluster + ", data=" + data, error);
 		}
 		return result;
 	}
@@ -571,7 +571,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 			Future<Boolean> f = getConnection().delete(mangleKey(idInCluster));
 			result = f.get(_timeoutInMs, TimeUnit.MILLISECONDS);
 		} catch (Exception error) {
-			log.warn("" + getClass().getSimpleName() + ": unable to delete from memcached: id=" + idInCluster, error);
+			log.warn("unable to delete key: id=" + idInCluster, error);
 		}
 		return result;
 	}
@@ -596,7 +596,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 		this._defaultExpiry = defaultExpiry;
 	}
 
-	public int getMemcachedTimeoutInMs() {
+	public int getTimeoutInMs() {
 		return _timeoutInMs;
 	}
 
