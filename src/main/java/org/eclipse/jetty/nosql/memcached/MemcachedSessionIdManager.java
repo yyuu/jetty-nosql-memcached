@@ -56,7 +56,7 @@ import org.eclipse.jetty.util.log.Logger;
  * unvalidated atm)
  */
 public class MemcachedSessionIdManager extends AbstractSessionIdManager {
-	private final static Logger log = Log.getLogger("org.eclipse.jetty.nosql.memcached");
+	private final static Logger log = Log.getLogger("org.eclipse.jetty.nosql.memcached.MemcachedSessionIdManager");
 
 	private MemcachedClient _connection;
 	protected Server _server;
@@ -144,7 +144,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	 * point of expiration.
 	 */
 	protected void scavenge() {
-		log.debug("SessionIdManager#scavenge:called with delay" + _scavengeDelay);
+		log.debug("scavenge:called with delay" + _scavengeDelay);
 
 		/*
 		 * run a query returning results that: - are in the known list of
@@ -176,7 +176,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 			if (data.getAccessed() < 0 || t < data.getAccessed()) {
 				continue;
 			}
-			log.info("MemcachedSessionIdManager:scavenging valid " + id);
+			log.info("scavenging valid " + id);
 			invalidateAll(id);
 		}
 	}
@@ -191,7 +191,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	 * coherence issues, not to be used in a running cluster
 	 */
 	protected void scavengeFully() {
-		log.debug("MemcachedSessionIdManager#scavengeFully");
+		log.debug("scavengeFully");
 		for (String id: _sessions.keySet()) {
 			SessionDataCache cache = _sessions.get(id);
 			if (cache == null) {
@@ -212,7 +212,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 			if (data.getAccessed() < 0) {
 				continue;
 			}
-			log.info("MemcachedSessionIdManager:scavenging valid " + id);
+			log.info("scavenging valid " + id);
 			invalidateAll(id);
 		}
 	}
@@ -237,7 +237,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	 * 'valid=false'
 	 */
 	protected void purge() {
-		log.debug("MemcachedSessionIdManager#purge:called with invalid age " + _purgeInvalidAge);
+		log.debug("purge:called with invalid age " + _purgeInvalidAge);
 
 		long t = System.currentTimeMillis() - _purgeInvalidAge;
 		for (String id : _sessions.keySet()) {
@@ -261,7 +261,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 				continue;
 			}
 			if (!data.isValid()) {
-				log.info("MemcachedSessionIdManager:purging invalid " + id);
+				log.info("purging invalid " + id);
 				deleteKey(id);
 				_sessions.remove(id);
 			}
@@ -275,7 +275,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	 * 
 	 */
 	protected void purgeFully() {
-		log.debug("MemcachedSessionIdManager#purgeFully");
+		log.debug("purgeFully");
 		for (String id: _sessions.keySet()) {
 			SessionDataCache cache = _sessions.get(id);
 			if (cache == null) {
@@ -297,7 +297,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 				continue;
 			}
 			if (!data.isValid()) {
-				log.info("MemcachedSessionIdManager:purging invalid " + id);
+				log.info("purging invalid " + id);
 				deleteKey(id);
 				_sessions.remove(id);
 			}
@@ -310,7 +310,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 			try {
 				this._connection = new MemcachedClient(AddrUtil.getAddresses(_serverString));
 			} catch (IOException error) {
-				log.warn("MemcachedSessionIdManager:getConnection: unable to establish connection to " + _serverString);
+				log.warn("getConnection: unable to establish connection to " + _serverString);
 			}
 		}
 		return _connection;
@@ -381,13 +381,13 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	/* ------------------------------------------------------------ */
 	@Override
 	protected void doStart() throws Exception {
-		log.debug("MemcachedSessionIdManager:starting");
+		log.debug("starting");
 
 		/*
 		 * setup the scavenger thread
 		 */
 		if (_scavengeDelay > 0) {
-			_scavengeTimer = new Timer("MemcachedSessionIdScavenger", true);
+			_scavengeTimer = new Timer(getClass().getSimpleName().toString() + "#scavenger", true);
 
 			synchronized (this) {
 				if (_scavengerTask != null) {
@@ -401,8 +401,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 					}
 				};
 
-				_scavengeTimer.schedule(_scavengerTask, _scavengeDelay,
-						_scavengePeriod);
+				_scavengeTimer.schedule(_scavengerTask, _scavengeDelay, _scavengePeriod);
 			}
 		}
 
@@ -410,7 +409,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 		 * if purging is enabled, setup the purge thread
 		 */
 		if (_purge) {
-			_purgeTimer = new Timer("MemcachedSessionIdPurger", true);
+			_purgeTimer = new Timer(getClass().getSimpleName().toString() + "#purger", true);
 
 			synchronized (this) {
 				if (_purgeTask != null) {
@@ -462,7 +461,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 			return;
 		}
 
-		log.debug("MemcachedSessionIdManager:addSession:" + session.getId());
+		log.debug("addSession:" + session.getId());
 
 		SessionDataCache cache = _sessions.get(session.getId());
 		if (cache == null) {
@@ -529,7 +528,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 			byte[] raw = (byte[]) f.get(_timeoutInMs, TimeUnit.MILLISECONDS);
 			data = MemcachedSessionData.unpack(raw);
 		} catch (Exception error) {
-			log.warn("unable to get from memcached: id=" + idInCluster, error);
+			log.warn("" + getClass().getSimpleName() + ": unable to get from memcached: id=" + idInCluster, error);
 		}
 		return data;
 	}
@@ -545,7 +544,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 			Future<Boolean> f = getConnection().set(mangleKey(idInCluster), expiry, raw);
 			result = f.get(_timeoutInMs, TimeUnit.MILLISECONDS);
 		} catch (Exception error) {
-			log.warn("unable to set to memcached: id=" + idInCluster + ", data=" + data, error);
+			log.warn("" + getClass().getSimpleName() + ": unable to set to memcached: id=" + idInCluster + ", data=" + data, error);
 		}
 		return result;
 	}
@@ -561,7 +560,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 			Future<Boolean> f = getConnection().add(mangleKey(idInCluster), expiry, raw);
 			result = f.get(_timeoutInMs, TimeUnit.MILLISECONDS);
 		} catch (Exception error) {
-			log.warn("unable to add to memcached: id=" + idInCluster + ", data=" + data, error);
+			log.warn("" + getClass().getSimpleName() + ": unable to add to memcached: id=" + idInCluster + ", data=" + data, error);
 		}
 		return result;
 	}
@@ -572,7 +571,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 			Future<Boolean> f = getConnection().delete(mangleKey(idInCluster));
 			result = f.get(_timeoutInMs, TimeUnit.MILLISECONDS);
 		} catch (Exception error) {
-			log.warn("unable to delete from memcached: id=" + idInCluster, error);
+			log.warn("" + getClass().getSimpleName() + ": unable to delete from memcached: id=" + idInCluster, error);
 		}
 		return result;
 	}
