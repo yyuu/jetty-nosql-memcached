@@ -1,0 +1,7 @@
+2011-09-13 Yamashita Yuu <yamashita@geishatokyo.com>
+	* Release: 0.0.2
+	* Added RedisSessionManager
+
+2011-09-12 Yamashita Yuu <yamashita@geishatokyo.com>
+	* Release: 0.0.1
+	* Initial release
