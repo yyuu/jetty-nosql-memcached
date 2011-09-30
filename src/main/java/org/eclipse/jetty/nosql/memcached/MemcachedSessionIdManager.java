@@ -523,12 +523,27 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 
 	protected MemcachedSessionData getKey(String idInCluster) {
 		MemcachedSessionData data = null;
+		Object rawObject = null;
+		byte[] raw = null;
 		try {
 			Future<Object> f = getConnection().asyncGet(mangleKey(idInCluster));
-			byte[] raw = (byte[]) f.get(_timeoutInMs, TimeUnit.MILLISECONDS);
-			data = MemcachedSessionData.unpack(raw);
+			rawObject = f.get(_timeoutInMs, TimeUnit.MILLISECONDS);
 		} catch (Exception error) {
 			log.warn("unable to get key: id=" + idInCluster, error);
+		}
+		if (rawObject == null) {
+			return null;
+		}
+		try {
+			if (rawObject instanceof String) { // FIXME: don't know why asyncGet returns String instead of byte[] in some cases.
+				log.warn("try to unpack raw object as String: id=" + idInCluster + ", rawObject=" + rawObject);
+				raw = ((String)rawObject).getBytes("UTF-16"); // TODO: must check if the encoding is proper
+			} else {
+				raw = (byte[]) rawObject;
+			}
+			data = MemcachedSessionData.unpack(raw);
+		} catch (Exception error) {
+			log.warn("unable to unpack data get from memcached: id=" + idInCluster + ", rawObject=" + rawObject + ", raw=" + raw + ", data=" + data, error);
 		}
 		return data;
 	}
@@ -539,8 +554,16 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 
 	protected boolean setKey(String idInCluster, MemcachedSessionData data, int expiry) {
 		boolean result = false;
+		byte[] raw = null;
 		try {
-			byte[] raw = MemcachedSessionData.pack(data);
+			raw = MemcachedSessionData.pack(data);
+		} catch (Exception error) {
+			log.warn("unable to pack data for set to memcached: id=" + idInCluster + ", data=" + data, error);
+		}
+		if (raw == null) {
+			return false;
+		}
+		try {
 			Future<Boolean> f = getConnection().set(mangleKey(idInCluster), expiry, raw);
 			result = f.get(_timeoutInMs, TimeUnit.MILLISECONDS);
 		} catch (Exception error) {
@@ -555,8 +578,16 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 
 	protected boolean addKey(String idInCluster, MemcachedSessionData data, int expiry) {
 		boolean result = false;
+		byte[] raw = null;
 		try {
-			byte[] raw = MemcachedSessionData.pack(data);
+			raw = MemcachedSessionData.pack(data);
+		} catch (Exception error) {
+			log.warn("unable to pack data for add to memcached: id=" + idInCluster + ", data=" + data, error);
+		}
+		if (raw == null) {
+			return false;
+		}
+		try {
 			Future<Boolean> f = getConnection().add(mangleKey(idInCluster), expiry, raw);
 			result = f.get(_timeoutInMs, TimeUnit.MILLISECONDS);
 		} catch (Exception error) {
