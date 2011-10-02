@@ -215,7 +215,7 @@ public class SessionSavingValueTest extends AbstractSessionValueSavingTest
             }
         }
         
-        public class Pojo implements Serializable
+        public static class Pojo implements Serializable
         {
 			private static final long serialVersionUID = -5149700272943378810L;
 			private String _name;

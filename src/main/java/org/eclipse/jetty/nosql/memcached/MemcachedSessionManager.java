@@ -112,7 +112,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 				session.didActivate();
 			}
 
-			return new Long(longVersion);
+			return Long.valueOf(longVersion);
 		} catch (Exception e) {
 			log.warn(e);
 		}
@@ -135,7 +135,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 					log.debug("refresh not needed");
 					return version;
 				}
-				version = new Long(saved);
+				version = Long.valueOf(saved);
 			}
 		}
 

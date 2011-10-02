@@ -14,6 +14,7 @@ package org.eclipse.jetty.nosql.memcached;
 //========================================================================
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
@@ -92,7 +93,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	private long _purgeValidAge = 7 * 24 * 60 * 60 * 1000; // default 1 week
 
 	protected final Map<String, SessionDataCache> _sessions = new ConcurrentHashMap<String, SessionDataCache>();
-	protected class SessionDataCache {
+	protected static class SessionDataCache {
 		protected long _accessed = -1;
 		protected long _invalidated = -1;
 		
@@ -538,7 +539,8 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 		try {
 			data = MemcachedSessionData.unpack(raw);
 		} catch (Exception error) {
-			log.warn("unable to unpack data get from memcached: id=" + idInCluster + ", raw=" + raw + ", data=" + data, error);
+			String str = Arrays.toString(raw);
+			log.warn("unable to unpack data get from memcached: id=" + idInCluster + ", raw=" + str + ", data=" + data, error);
 		}
 		return data;
 	}
