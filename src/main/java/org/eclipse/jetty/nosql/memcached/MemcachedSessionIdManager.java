@@ -28,6 +28,7 @@ import javax.servlet.http.HttpSession;
 
 import net.spy.memcached.AddrUtil;
 import net.spy.memcached.MemcachedClient;
+import net.spy.memcached.transcoders.Transcoder;
 
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
@@ -124,6 +125,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	private int _timeoutInMs = 1000;
 	private String _keyPrefix = "";
 	private String _keySuffix = "";
+	private Transcoder<byte[]> tc = new ByteArrayTranscoder();
 
 	/* ------------------------------------------------------------ */
 	public MemcachedSessionIdManager(Server server) throws IOException {
@@ -523,27 +525,20 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 
 	protected MemcachedSessionData getKey(String idInCluster) {
 		MemcachedSessionData data = null;
-		Object rawObject = null;
 		byte[] raw = null;
 		try {
-			Future<Object> f = getConnection().asyncGet(mangleKey(idInCluster));
-			rawObject = f.get(_timeoutInMs, TimeUnit.MILLISECONDS);
+			Future<byte[]> f = getConnection().asyncGet(mangleKey(idInCluster), tc);
+			raw = f.get(_timeoutInMs, TimeUnit.MILLISECONDS);
 		} catch (Exception error) {
 			log.warn("unable to get key: id=" + idInCluster, error);
 		}
-		if (rawObject == null) {
+		if (raw == null) {
 			return null;
 		}
 		try {
-			if (rawObject instanceof String) { // FIXME: don't know why asyncGet returns String instead of byte[] in some cases.
-				log.warn("try to unpack raw object as String: id=" + idInCluster + ", rawObject=" + rawObject);
-				raw = ((String)rawObject).getBytes("UTF-16"); // TODO: must check if the encoding is proper
-			} else {
-				raw = (byte[]) rawObject;
-			}
 			data = MemcachedSessionData.unpack(raw);
 		} catch (Exception error) {
-			log.warn("unable to unpack data get from memcached: id=" + idInCluster + ", rawObject=" + rawObject + ", raw=" + raw + ", data=" + data, error);
+			log.warn("unable to unpack data get from memcached: id=" + idInCluster + ", raw=" + raw + ", data=" + data, error);
 		}
 		return data;
 	}
@@ -564,7 +559,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 			return false;
 		}
 		try {
-			Future<Boolean> f = getConnection().set(mangleKey(idInCluster), expiry, raw);
+			Future<Boolean> f = getConnection().set(mangleKey(idInCluster), expiry, raw, tc);
 			result = f.get(_timeoutInMs, TimeUnit.MILLISECONDS);
 		} catch (Exception error) {
 			log.warn("unable to set key: id=" + idInCluster + ", data=" + data, error);
@@ -588,7 +583,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 			return false;
 		}
 		try {
-			Future<Boolean> f = getConnection().add(mangleKey(idInCluster), expiry, raw);
+			Future<Boolean> f = getConnection().add(mangleKey(idInCluster), expiry, raw, tc);
 			result = f.get(_timeoutInMs, TimeUnit.MILLISECONDS);
 		} catch (Exception error) {
 			log.warn("unable to add key: id=" + idInCluster + ", data=" + data, error);
