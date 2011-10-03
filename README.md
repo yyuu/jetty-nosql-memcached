@@ -10,7 +10,6 @@ Jetty's SessionManager implementation based on jetty-nosql.
 * jetty (8.0.0 or later)
 * jetty-nosql (8.0.0 or later)
 * spymemcached (for MemcachedSessionManager)
-* jedis (for RedisSessionManager)
 
 You may need following dependency to run tests.
 
