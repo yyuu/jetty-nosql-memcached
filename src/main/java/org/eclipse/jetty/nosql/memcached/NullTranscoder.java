@@ -4,7 +4,8 @@ import net.spy.memcached.CachedData;
 import net.spy.memcached.compat.SpyObject;
 import net.spy.memcached.transcoders.Transcoder;
 
-public class ByteArrayTranscoder extends SpyObject implements Transcoder<byte[]> {
+public class NullTranscoder extends SpyObject implements Transcoder<byte[]> {
+// Kyoty Tycoon accepts only flags==0 on storing data.
 	private static final int flags = 0;
 
 	public boolean asyncDecode(CachedData d) {

@@ -126,7 +126,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	private int _timeoutInMs = 1000;
 	private String _keyPrefix = "";
 	private String _keySuffix = "";
-	private Transcoder<byte[]> tc = new ByteArrayTranscoder();
+	private Transcoder<byte[]> tc = new NullTranscoder();
 
 	/* ------------------------------------------------------------ */
 	public MemcachedSessionIdManager(Server server) throws IOException {
