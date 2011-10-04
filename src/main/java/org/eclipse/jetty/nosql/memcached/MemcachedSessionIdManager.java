@@ -60,7 +60,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	private MemcachedClient _connection;
 	protected Server _server;
 
-	private long _scavengeDelay = 30 * 60 * 1000; // every 30 minutes
+	private long _scavengeDelay = TimeUnit.MINUTES.toMillis(30); // 30 minutes
 
 	protected final Set<String> _sessions = Collections.synchronizedSet(new LinkedHashSet<String>());
 
@@ -349,6 +349,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	}
 
 	protected MemcachedSessionData getKey(String idInCluster) {
+		log.debug("get: id=" + idInCluster);
 		MemcachedSessionData data = null;
 		byte[] raw = null;
 		try {
@@ -374,6 +375,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	}
 
 	protected boolean setKey(String idInCluster, MemcachedSessionData data, int expiry) {
+		log.debug("set: id=" + idInCluster + ", expiry=" + expiry);
 		boolean result = false;
 		byte[] raw = null;
 		try {
@@ -398,6 +400,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	}
 
 	protected boolean addKey(String idInCluster, MemcachedSessionData data, int expiry) {
+		log.debug("add: id=" + idInCluster + ", expiry=" + expiry);
 		boolean result = false;
 		byte[] raw = null;
 		try {
@@ -418,6 +421,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	}
 
 	protected boolean deleteKey(String idInCluster) {
+		log.debug("delete: id=" + idInCluster);
 		boolean result = false;
 		try {
 			Future<Boolean> f = getConnection().delete(mangleKey(idInCluster));
