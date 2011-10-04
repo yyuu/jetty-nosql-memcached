@@ -25,7 +25,6 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 	private final static Logger log = Log.getLogger("org.eclipse.jetty.nosql.memcached.MemcachedSessionManager");
 	private String _cookieDomain = getSessionCookieConfig().getDomain();
 	private String _cookiePath = getSessionCookieConfig().getPath();
-	private int _cookieMaxAge = getSessionCookieConfig().getMaxAge();
 
 	/* ------------------------------------------------------------ */
 	public MemcachedSessionManager() {
@@ -282,21 +281,34 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 		}
 	}
 
+	/**
+	 * @deprecated
+	 */
 	public void purge() {
-		((MemcachedSessionIdManager) _sessionIdManager).purge();
+		return;
 	}
 
+	/**
+	 * @deprecated
+	 */
 	public void purgeFully() {
-		((MemcachedSessionIdManager) _sessionIdManager).purgeFully();
+		return;
 	}
 
+	/**
+	 * @deprecated
+	 */
 	public void scavenge() {
-		((MemcachedSessionIdManager) _sessionIdManager).scavenge();
+		return;
 	}
 
+	/**
+	 * @deprecated
+	 */
 	public void scavengeFully() {
-		((MemcachedSessionIdManager) _sessionIdManager).scavengeFully();
+		return;
 	}
+
 
 	/*------------------------------------------------------------ */
 	/**
@@ -318,21 +330,21 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 	}
 
 	protected boolean setKey(String idInCluster, MemcachedSessionData data) {
-		if (_cookieMaxAge < 0) {
+		int expiry = getMaxInactiveInterval();
+		if (expiry < 0) {
 			// use idManager's default expiry if _cookieMaxAge is negative. (expiry must not be negative)
 			return ((MemcachedSessionIdManager)_sessionIdManager).setKey(mangleKey(idInCluster), data);
 		} else {
-			int expiry = _cookieMaxAge * 2;
 			return ((MemcachedSessionIdManager)_sessionIdManager).setKey(mangleKey(idInCluster), data, expiry);
 		}
 	}
 
 	protected boolean addKey(String idInCluster, MemcachedSessionData data) {
-		if (_cookieMaxAge < 0) {
+		int expiry = getMaxInactiveInterval();
+		if (expiry < 0) {
 			// use idManager's default expiry if _cookieMaxAge is negative. (expiry must not be negative)
 			return ((MemcachedSessionIdManager)_sessionIdManager).addKey(mangleKey(idInCluster), data);
 		} else {
-			int expiry = _cookieMaxAge * 2;
 			return ((MemcachedSessionIdManager)_sessionIdManager).addKey(mangleKey(idInCluster), data, expiry);
 		}
 	}

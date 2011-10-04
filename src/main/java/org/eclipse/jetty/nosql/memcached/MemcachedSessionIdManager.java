@@ -18,8 +18,6 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -62,35 +60,8 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 
 	private MemcachedClient _connection;
 	protected Server _server;
-	private Timer _scavengeTimer;
-	private Timer _purgeTimer;
-	private TimerTask _scavengerTask;
-	private TimerTask _purgeTask;
 
 	private long _scavengeDelay = 30 * 60 * 1000; // every 30 minutes
-	private long _scavengePeriod = 10 * 6 * 1000; // wait at least 10 minutes
-
-	/**
-	 * purge process is enabled by default
-	 */
-	private boolean _purge = true;
-
-	/**
-	 * purge process would run daily by default
-	 */
-	private long _purgeDelay = 24 * 60 * 60 * 1000; // every day
-
-	/**
-	 * how long do you want to persist sessions that are no longer valid before
-	 * removing them completely
-	 */
-	private long _purgeInvalidAge = 24 * 60 * 60 * 1000; // default 1 day
-
-	/**
-	 * how long do you want to leave sessions that are still valid before
-	 * assuming they are dead and removing them
-	 */
-	private long _purgeValidAge = 7 * 24 * 60 * 60 * 1000; // default 1 week
 
 	protected final Map<String, SessionDataCache> _sessions = new ConcurrentHashMap<String, SessionDataCache>();
 	protected static class SessionDataCache {
@@ -122,7 +93,6 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	}
 
 	private String _serverString = "127.0.0.1:11211";
-	private int _defaultExpiry = 0; // never expire
 	private int _timeoutInMs = 1000;
 	private String _keyPrefix = "";
 	private String _keySuffix = "";
@@ -142,46 +112,13 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 
 	/* ------------------------------------------------------------ */
 	/**
+	 * @deprecated
 	 * Scavenge is a process that periodically checks the tracked session ids of
 	 * this given instance of the session id manager to see if they are past the
 	 * point of expiration.
 	 */
 	protected void scavenge() {
-		log.debug("scavenge:called with delay" + _scavengeDelay);
-
-		/*
-		 * run a query returning results that: - are in the known list of
-		 * sessionIds - have an accessed time less then current time - the
-		 * scavenger period
-		 * 
-		 * we limit the query to return just the __ID so we are not sucking back
-		 * full sessions
-		 */
-
-		long t = System.currentTimeMillis() - _scavengeDelay;
-		for (String id : _sessions.keySet()) {
-			SessionDataCache cache = _sessions.get(id);
-			if (cache == null) {
-				// cached record was disappeared during iteration. 
-				_sessions.remove(id);
-				continue;
-			}
-			if (cache.getAccessed() < 0 || t < cache.getAccessed()) {
-				continue;
-			}
-			// refresh cached data and test again.
-			MemcachedSessionData data = getKey(id);
-			if (data == null) {
-				// record was disappeared during iteration.
-				_sessions.remove(id);
-				continue;
-			}
-			if (data.getAccessed() < 0 || t < data.getAccessed()) {
-				continue;
-			}
-			log.info("scavenging valid " + id);
-			invalidateAll(id);
-		}
+		return;
 	}
 
 	/* ------------------------------------------------------------ */
@@ -222,6 +159,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 
 	/* ------------------------------------------------------------ */
 	/**
+	 * @deprecated
 	 * Purge is a process that cleans the memcached cluster of old sessions that
 	 * are no longer valid.
 	 * 
@@ -240,35 +178,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	 * 'valid=false'
 	 */
 	protected void purge() {
-		log.debug("purge:called with invalid age " + _purgeInvalidAge);
-
-		long t = System.currentTimeMillis() - _purgeInvalidAge;
-		for (String id : _sessions.keySet()) {
-			SessionDataCache cache = _sessions.get(id);
-			if (cache == null) {
-				// cached record was disappeared during iteration. 
-				_sessions.remove(id);
-				continue;
-			}
-			if (cache.getInvalidated() < 0 || t < cache.getInvalidated()) {
-				continue;
-			}
-			// refresh cached data and test again.
-			MemcachedSessionData data = getKey(id);
-			if (data == null) {
-				// record was disappeared during iteration.
-				_sessions.remove(id);
-				continue;
-			}
-			if (data.getInvalidated() < 0 || t < data.getInvalidated()) {
-				continue;
-			}
-			if (!data.isValid()) {
-				log.info("purging invalid " + id);
-				deleteKey(id);
-				_sessions.remove(id);
-			}
-		}
+		return;
 	}
 
 	/* ------------------------------------------------------------ */
@@ -320,13 +230,19 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	}
 
 	/* ------------------------------------------------------------ */
+	/**
+	 * @deprecated
+	 */
 	public boolean isPurgeEnabled() {
-		return _purge;
+		return false;
 	}
 
 	/* ------------------------------------------------------------ */
+	/**
+	 * @deprecated
+	 */
 	public void setPurge(boolean purge) {
-		this._purge = purge;
+		return;
 	}
 
 	/* ------------------------------------------------------------ */
@@ -338,115 +254,73 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	}
 
 	/* ------------------------------------------------------------ */
+	/**
+	 * @deprecated
+	 */
 	public void setScavengePeriod(long scavengePeriod) {
-		this._scavengePeriod = scavengePeriod;
-	}
-
-	/* ------------------------------------------------------------ */
-	public void setPurgeDelay(long purgeDelay) {
-		if (isRunning()) {
-			throw new IllegalStateException();
-		}
-
-		this._purgeDelay = purgeDelay;
-	}
-
-	/* ------------------------------------------------------------ */
-	public long getPurgeInvalidAge() {
-		return _purgeInvalidAge;
+		return;
 	}
 
 	/* ------------------------------------------------------------ */
 	/**
+	 * @deprecated
+	 */
+	public void setPurgeDelay(long purgeDelay) {
+		return;
+	}
+
+	/* ------------------------------------------------------------ */
+	/**
+	 * @deprecated
+	 */
+	public long getPurgeInvalidAge() {
+		return -1;
+	}
+
+	/* ------------------------------------------------------------ */
+	/**
+	 * @deprecated
 	 * sets how old a session is to be persisted past the point it is no longer
 	 * valid
 	 */
 	public void setPurgeInvalidAge(long purgeValidAge) {
-		this._purgeInvalidAge = purgeValidAge;
-	}
-
-	/* ------------------------------------------------------------ */
-	public long getPurgeValidAge() {
-		return _purgeValidAge;
+		return;
 	}
 
 	/* ------------------------------------------------------------ */
 	/**
+	 * @deprecated
+	 */
+	public long getPurgeValidAge() {
+		return -1;
+	}
+
+	/* ------------------------------------------------------------ */
+	/**
+	 * @deprecated
 	 * sets how old a session is to be persist past the point it is considered
 	 * no longer viable and should be removed
 	 * 
 	 * NOTE: set this value to 0 to disable purging of valid sessions
 	 */
 	public void setPurgeValidAge(long purgeValidAge) {
-		this._purgeValidAge = purgeValidAge;
+		return;
 	}
 
 	/* ------------------------------------------------------------ */
 	@Override
 	protected void doStart() throws Exception {
 		log.debug("starting");
-
-		/*
-		 * setup the scavenger thread
-		 */
-		if (_scavengeDelay > 0) {
-			_scavengeTimer = new Timer(getClass().getSimpleName().toString() + "#scavenger", true);
-
-			synchronized (this) {
-				if (_scavengerTask != null) {
-					_scavengerTask.cancel();
-				}
-
-				_scavengerTask = new TimerTask() {
-					@Override
-					public void run() {
-						scavenge();
-					}
-				};
-
-				_scavengeTimer.schedule(_scavengerTask, _scavengeDelay, _scavengePeriod);
-			}
-		}
-
-		/*
-		 * if purging is enabled, setup the purge thread
-		 */
-		if (_purge) {
-			_purgeTimer = new Timer(getClass().getSimpleName().toString() + "#purger", true);
-
-			synchronized (this) {
-				if (_purgeTask != null) {
-					_purgeTask.cancel();
-				}
-				_purgeTask = new TimerTask() {
-					@Override
-					public void run() {
-						purge();
-					}
-				};
-				_purgeTimer.schedule(_purgeTask, _purgeDelay);
-			}
-		}
+		super.doStart();
 	}
 
 	/* ------------------------------------------------------------ */
 	@Override
 	protected void doStop() throws Exception {
-		if (_scavengeTimer != null) {
-			_scavengeTimer.cancel();
-			_scavengeTimer = null;
-		}
-
-		if (_purgeTimer != null) {
-			_purgeTimer.cancel();
-			_purgeTimer = null;
-		}
-		
 		if (_connection != null) {
 			_connection.shutdown();
 			_connection = null;
 		}
-
 		super.doStop();
 	}
 
@@ -546,7 +420,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	}
 	
 	protected boolean setKey(String idInCluster, MemcachedSessionData data) {
-		return setKey(idInCluster, data, _defaultExpiry);
+		return setKey(idInCluster, data, getDefaultExpiry());
 	}
 
 	protected boolean setKey(String idInCluster, MemcachedSessionData data, int expiry) {
@@ -570,7 +444,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	}
 
 	protected boolean addKey(String idInCluster, MemcachedSessionData data) {
-		return addKey(idInCluster, data, _defaultExpiry);
+		return addKey(idInCluster, data, getDefaultExpiry());
 	}
 
 	protected boolean addKey(String idInCluster, MemcachedSessionData data, int expiry) {
@@ -617,11 +491,11 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	}
 
 	public int getDefaultExpiry() {
-		return _defaultExpiry;
+		return (int) TimeUnit.MILLISECONDS.toSeconds(_scavengeDelay);
 	}
 
 	public void setDefaultExpiry(int defaultExpiry) {
-		this._defaultExpiry = defaultExpiry;
+		this._scavengeDelay = TimeUnit.SECONDS.toMillis(defaultExpiry);
 	}
 
 	public int getTimeoutInMs() {
