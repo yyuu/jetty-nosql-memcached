@@ -1,6 +1,10 @@
+2011-10-04 Yamashita Yuu <yamashita@geishatokyo.com>
+	* Release: 0.0.4
+	* Removed scavenger thread. Now using record expiration of memcached for scavenge.
+
 2011-10-03 Yamashita Yuu <yamashita@geishatokyo.com>
 	* Release: 0.0.3
-  * Added transcoder for spymemcached to support Kyoto Tycoon's ktplugservmemc.
+	* Added transcoder for spymemcached to support Kyoto Tycoon's ktplugservmemc.
 	* Forked RedisSessionManager to new projecty jetty-nosql-redis.
 
 2011-09-13 Yamashita Yuu <yamashita@geishatokyo.com>

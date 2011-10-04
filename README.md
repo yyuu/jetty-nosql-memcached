@@ -2,7 +2,7 @@
 
 ## Overview
 
-Jetty's SessionManager implementation based on jetty-nosql.
+SessionManager implementation for Jetty based on jetty-nosql.
 
 
 ## Requirements
