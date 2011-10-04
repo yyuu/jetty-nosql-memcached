@@ -15,10 +15,10 @@ package org.eclipse.jetty.nosql.memcached;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Map;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -33,7 +33,6 @@ import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.SessionManager;
 import org.eclipse.jetty.server.handler.ContextHandler;
-import org.eclipse.jetty.server.session.AbstractSession;
 import org.eclipse.jetty.server.session.AbstractSessionIdManager;
 import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.util.log.Log;
@@ -63,34 +62,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 
 	private long _scavengeDelay = 30 * 60 * 1000; // every 30 minutes
 
-	protected final Map<String, SessionDataCache> _sessions = new ConcurrentHashMap<String, SessionDataCache>();
-	protected static class SessionDataCache {
-		protected long _accessed = -1;
-		protected long _invalidated = -1;
-		
-		protected SessionDataCache() {
-			this._accessed = System.currentTimeMillis();
-		}
-		protected SessionDataCache(long accessed) {
-			this._accessed = accessed;
-		}
-		
-		protected void setAccessed(long accessed) {
-			this._accessed = accessed;
-		}
-		
-		protected long getAccessed() {
-			return _accessed;
-		}
-		
-		protected void setInvalidated(long invalidated) {
-			this._invalidated = invalidated;
-		}
-		
-		protected long getInvalidated() {
-			return _invalidated;
-		}
-	}
+	protected final Set<String> _sessions = Collections.synchronizedSet(new LinkedHashSet<String>());
 
 	private String _serverString = "127.0.0.1:11211";
 	private int _timeoutInMs = 1000;
@@ -132,16 +104,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	 */
 	protected void scavengeFully() {
 		log.debug("scavengeFully");
-		for (String id: _sessions.keySet()) {
-			SessionDataCache cache = _sessions.get(id);
-			if (cache == null) {
-				// cached record was disappeared during iteration. 
-				_sessions.remove(id);
-				continue;
-			}
-			if (cache.getAccessed() < 0) {
-				continue;
-			}
+		for (String id: _sessions) {
 			// refresh cached data and test again.
 			MemcachedSessionData data = getKey(id);
 			if (data == null) {
@@ -189,16 +152,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	 */
 	protected void purgeFully() {
 		log.debug("purgeFully");
-		for (String id: _sessions.keySet()) {
-			SessionDataCache cache = _sessions.get(id);
-			if (cache == null) {
-				// cached record was disappeared during iteration. 
-				_sessions.remove(id);
-				continue;
-			}
-			if (cache.getInvalidated() < 0) {
-				continue;
-			}
+		for (String id: _sessions) {
 			// refresh cached data and test again.
 			MemcachedSessionData data = getKey(id);
 			if (data == null) {
@@ -340,11 +294,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 
 		log.debug("addSession:" + session.getId());
 
-		SessionDataCache cache = _sessions.get(session.getId());
-		if (cache == null) {
-			cache = new SessionDataCache(((AbstractSession)session).getAccessed());
-		}
-		_sessions.put(session.getId(), cache);
+		_sessions.add(session.getId());
 	}
 
 	/* ------------------------------------------------------------ */
@@ -479,7 +429,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	}
 
 	protected Set<String> getSessions() {
-		return _sessions.keySet();
+		return Collections.unmodifiableSet(_sessions);
 	}
 	
 	public String getServerString() {
