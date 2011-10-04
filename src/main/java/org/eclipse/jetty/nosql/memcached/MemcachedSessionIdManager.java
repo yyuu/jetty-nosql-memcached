@@ -60,7 +60,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	private MemcachedClient _connection;
 	protected Server _server;
 
-	private long _scavengeDelay = TimeUnit.MINUTES.toMillis(30); // 30 minutes
+	private long _scavengePeriod = TimeUnit.MINUTES.toMillis(30); // 30 minutes
 
 	protected final Set<String> _sessions = Collections.synchronizedSet(new LinkedHashSet<String>());
 
@@ -201,18 +201,16 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 
 	/* ------------------------------------------------------------ */
 	/**
+	 * @deprecated
 	 * sets the scavengeDelay
 	 */
 	public void setScavengeDelay(long scavengeDelay) {
-		this._scavengeDelay = scavengeDelay;
+		this._scavengePeriod = scavengeDelay;
 	}
 
 	/* ------------------------------------------------------------ */
-	/**
-	 * @deprecated
-	 */
 	public void setScavengePeriod(long scavengePeriod) {
-		return;
+		this._scavengePeriod = scavengePeriod;
 	}
 
 	/* ------------------------------------------------------------ */
@@ -343,7 +341,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 		}
 		return clusterId;
 	}
-	
+
 	protected String mangleKey(String key) {
 		return _keyPrefix + key + _keySuffix;
 	}
@@ -369,7 +367,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 		}
 		return data;
 	}
-	
+
 	protected boolean setKey(String idInCluster, MemcachedSessionData data) {
 		return setKey(idInCluster, data, getDefaultExpiry());
 	}
@@ -435,7 +433,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	protected Set<String> getSessions() {
 		return Collections.unmodifiableSet(_sessions);
 	}
-	
+
 	public String getServerString() {
 		return _serverString;
 	}
@@ -445,11 +443,11 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	}
 
 	public int getDefaultExpiry() {
-		return (int) TimeUnit.MILLISECONDS.toSeconds(_scavengeDelay);
+		return (int) TimeUnit.MILLISECONDS.toSeconds(_scavengePeriod);
 	}
 
 	public void setDefaultExpiry(int defaultExpiry) {
-		this._scavengeDelay = TimeUnit.SECONDS.toMillis(defaultExpiry);
+		this._scavengePeriod = TimeUnit.SECONDS.toMillis(defaultExpiry);
 	}
 
 	public int getTimeoutInMs() {

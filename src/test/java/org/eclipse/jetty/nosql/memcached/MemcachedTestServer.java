@@ -65,8 +65,7 @@ public class MemcachedTestServer extends AbstractTestServer
                 e.printStackTrace();
             }
             
-            _idManager.setScavengeDelay((int) TimeUnit.SECONDS.toMillis(_scavengePeriod));
-            _idManager.setScavengePeriod((int) TimeUnit.SECONDS.toMillis(_maxInactivePeriod));
+            _idManager.setScavengePeriod((int) TimeUnit.SECONDS.toMillis(_scavengePeriod));
             _idManager.setWorkerName("node0");
             
             try
@@ -86,9 +85,7 @@ public class MemcachedTestServer extends AbstractTestServer
             System.err.println("MemcachedTestServer:SessionIdManager:" + _maxInactivePeriod + "/" + _scavengePeriod);
             _idManager = new MemcachedSessionIdManager(_server, "127.0.0.1:11211");
             
-            _idManager.setScavengeDelay((int)TimeUnit.SECONDS.toMillis(_scavengePeriod));
-            _idManager.setScavengePeriod((int)TimeUnit.SECONDS.toMillis(_maxInactivePeriod));
-            _idManager.setDefaultExpiry(300);
+            _idManager.setScavengePeriod((int)TimeUnit.SECONDS.toMillis(_scavengePeriod));
             _idManager.setKeyPrefix("MemcachedTestServer::");
             
             return _idManager;
