@@ -17,6 +17,10 @@ import java.util.Enumeration;
 
 import org.eclipse.jetty.nosql.NoSqlSession;
 import org.eclipse.jetty.nosql.NoSqlSessionManager;
+import org.eclipse.jetty.nosql.session.AbstractSessionFacade;
+import org.eclipse.jetty.nosql.session.ISerializableSession;
+import org.eclipse.jetty.nosql.session.TranscoderException;
+import org.eclipse.jetty.nosql.session.serializable.SerializableSessionFacade;
 import org.eclipse.jetty.server.SessionIdManager;
 import org.eclipse.jetty.util.log.Log;
 import org.eclipse.jetty.util.log.Logger;
@@ -25,6 +29,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 	private final static Logger log = Log.getLogger("org.eclipse.jetty.nosql.memcached.MemcachedSessionManager");
 	private String _cookieDomain = getSessionCookieConfig().getDomain();
 	private String _cookiePath = getSessionCookieConfig().getPath();
+	private AbstractSessionFacade sessionFacade = null;
 
 	/* ------------------------------------------------------------ */
 	public MemcachedSessionManager() {
@@ -51,6 +56,10 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 				cookiePath = "*";
 			}
 			this._cookiePath = cookiePath;
+		}
+		if (sessionFacade == null) {
+//			sessionFacade = new KryoSessionFacade();
+			sessionFacade = new SerializableSessionFacade();
 		}
 	}
 
@@ -80,14 +89,14 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 			log.debug("save:" + session);
 			session.willPassivate();
 
-			MemcachedSessionData data = null;
+			ISerializableSession data = null;
 			if (session.isValid()) {
-				data = new MemcachedSessionData(session);
+				data = getSessionFacade().create(session);
 			} else {
 				Log.warn("save: try to recover attributes of invalidated session: id=" + session.getId());
 				data = getKey(session.getId());
 				if (data == null) {
-					data = new MemcachedSessionData(session.getId(), session.getCreationTime());
+					data = getSessionFacade().create(session.getId(), session.getCreationTime());
 				}
 				if (data.isValid()) {
 					data.setValid(false);
@@ -125,7 +134,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 
 		// check if our in memory version is the same as what is on the disk
 		if (version != null) {
-			MemcachedSessionData data = getKey(session.getClusterId());
+			ISerializableSession data = getKey(session.getClusterId());
 			long saved = 0;
 			if (data != null) {
 				saved = data.getVersion();
@@ -139,7 +148,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 		}
 
 		// If we are here, we have to load the object
-		MemcachedSessionData data = getKey(session.getClusterId());
+		ISerializableSession data = getKey(session.getClusterId());
 
 		// If it doesn't exist, invalidate
 		if (data == null) {
@@ -183,7 +192,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 	/*------------------------------------------------------------ */
 	@Override
 	protected synchronized NoSqlSession loadSession(String clusterId) {
-		MemcachedSessionData data = getKey(clusterId);
+		ISerializableSession data = getKey(clusterId);
 
 		log.debug("loaded " + data);
 
@@ -270,7 +279,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 		 * pull back the 'valid' value, we can check if its false, if is we
 		 * don't need to reset it to false
 		 */
-		MemcachedSessionData data = getKey(idInCluster);
+		ISerializableSession data = getKey(idInCluster);
 
 		if (data != null && data.isValid()) {
 			data.setValid(false);
@@ -325,31 +334,73 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 		return idInCluster;
 	}
 
-	protected MemcachedSessionData getKey(String idInCluster) {
-		return ((MemcachedSessionIdManager)_sessionIdManager).getKey(mangleKey(idInCluster));
+	protected ISerializableSession getKey(String idInCluster) {
+		byte[] raw = ((MemcachedSessionIdManager)_sessionIdManager).getKey(mangleKey(idInCluster));
+		if (raw == null) {
+			return null;
+		}
+		ISerializableSession data = null;
+		try {
+			data = getSessionFacade().unpack(raw);
+		} catch (TranscoderException error) {
+			log.warn("unable to deserialize data: id=" + idInCluster, error);
+		} catch (Exception error) {
+			log.warn("unknown exception during deserilization: id=" + idInCluster, error);
+		}
+		return data;
 	}
 
-	protected boolean setKey(String idInCluster, MemcachedSessionData data) {
+	protected boolean setKey(String idInCluster, ISerializableSession data) {
 		int expiry = getMaxInactiveInterval();
+		byte[] raw = null;
+		try {
+			raw = getSessionFacade().pack(data);
+		} catch (TranscoderException error) {
+			log.warn("unable to serialize data: id=" + idInCluster + ", data=" + data, error);
+		} catch (Exception error) {
+			log.warn("unknown exception during serialization: id=" + idInCluster + ", data=" + data, error);
+		}
+		if (raw == null) {
+			return false;
+		}
 		if (expiry < 0) {
 			// use idManager's default expiry if _cookieMaxAge is negative. (expiry must not be negative)
-			return ((MemcachedSessionIdManager)_sessionIdManager).setKey(mangleKey(idInCluster), data);
+			return ((MemcachedSessionIdManager)_sessionIdManager).setKey(mangleKey(idInCluster), raw);
 		} else {
-			return ((MemcachedSessionIdManager)_sessionIdManager).setKey(mangleKey(idInCluster), data, expiry);
+			return ((MemcachedSessionIdManager)_sessionIdManager).setKey(mangleKey(idInCluster), raw, expiry);
 		}
 	}
 
-	protected boolean addKey(String idInCluster, MemcachedSessionData data) {
+	protected boolean addKey(String idInCluster, ISerializableSession data) {
 		int expiry = getMaxInactiveInterval();
+		byte[] raw = null;
+		try {
+			raw = getSessionFacade().pack(data);
+		} catch (TranscoderException error) {
+			log.warn("unable to serialize data: id=" + idInCluster + ", data=" + data, error);
+		} catch (Exception error) {
+			log.warn("unknown exception during serialization: id=" + idInCluster + ", data=" + data, error);
+		}
+		if (raw == null) {
+			return false;
+		}
 		if (expiry < 0) {
 			// use idManager's default expiry if _cookieMaxAge is negative. (expiry must not be negative)
-			return ((MemcachedSessionIdManager)_sessionIdManager).addKey(mangleKey(idInCluster), data);
+			return ((MemcachedSessionIdManager)_sessionIdManager).addKey(mangleKey(idInCluster), raw);
 		} else {
-			return ((MemcachedSessionIdManager)_sessionIdManager).addKey(mangleKey(idInCluster), data, expiry);
+			return ((MemcachedSessionIdManager)_sessionIdManager).addKey(mangleKey(idInCluster), raw, expiry);
 		}
 	}
 
 	protected boolean deleteKey(String idInCluster) {
 		return ((MemcachedSessionIdManager)_sessionIdManager).deleteKey(mangleKey(idInCluster));
+	}
+
+	public AbstractSessionFacade getSessionFacade() {
+		return sessionFacade;
+	}
+
+	public void setSessionFacade(AbstractSessionFacade sf) {
+		this.sessionFacade = sf;
 	}
 }

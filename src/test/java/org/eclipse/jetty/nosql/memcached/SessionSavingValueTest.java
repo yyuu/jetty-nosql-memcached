@@ -221,6 +221,12 @@ public class SessionSavingValueTest extends AbstractSessionValueSavingTest
 			private String _name;
             private String _value;
             
+            public Pojo( )
+            {
+                _name = "name";
+                _value = "value";
+            }
+
             public Pojo( String name, String value )
             {
                 _name = name;

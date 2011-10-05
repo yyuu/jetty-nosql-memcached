@@ -14,7 +14,6 @@ package org.eclipse.jetty.nosql.memcached;
 //========================================================================
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Random;
@@ -95,6 +94,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 
 	/* ------------------------------------------------------------ */
 	/**
+	 * @deprecated
 	 * ScavengeFully is a process that periodically checks the tracked session
 	 * ids of this given instance of the session id manager to see if they are
 	 * past the point of expiration.
@@ -103,21 +103,7 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	 * coherence issues, not to be used in a running cluster
 	 */
 	protected void scavengeFully() {
-		log.debug("scavengeFully");
-		for (String id: _sessions) {
-			// refresh cached data and test again.
-			MemcachedSessionData data = getKey(id);
-			if (data == null) {
-				// record was disappeared during iteration.
-				_sessions.remove(id);
-				continue;
-			}
-			if (data.getAccessed() < 0) {
-				continue;
-			}
-			log.info("scavenging valid " + id);
-			invalidateAll(id);
-		}
+		return;
 	}
 
 	/* ------------------------------------------------------------ */
@@ -146,29 +132,13 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 
 	/* ------------------------------------------------------------ */
 	/**
+	 * @deprecated
 	 * Purge is a process that cleans the memcached cluster of old sessions that
 	 * are no longer valid.
 	 * 
 	 */
 	protected void purgeFully() {
-		log.debug("purgeFully");
-		for (String id: _sessions) {
-			// refresh cached data and test again.
-			MemcachedSessionData data = getKey(id);
-			if (data == null) {
-				// record was disappeared during iteration.
-				_sessions.remove(id);
-				continue;
-			}
-			if (data.getInvalidated() < 0) {
-				continue;
-			}
-			if (!data.isValid()) {
-				log.info("purging invalid " + id);
-				deleteKey(id);
-				_sessions.remove(id);
-			}
-		}
+		return;
 	}
 
 	/* ------------------------------------------------------------ */
@@ -281,7 +251,8 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	 * is the session id known to memcached, and is it valid
 	 */
 	public boolean idInUse(String idInCluster) {
-		return ! addKey(idInCluster, new MemcachedSessionData(idInCluster));
+		byte[] dummy = idInCluster.getBytes(); // TODO: replace this by new empty session
+		return ! addKey(idInCluster, dummy);
 	}
 
 	/* ------------------------------------------------------------ */
@@ -346,9 +317,8 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 		return _keyPrefix + key + _keySuffix;
 	}
 
-	protected MemcachedSessionData getKey(String idInCluster) {
+	protected byte[] getKey(String idInCluster) {
 		log.debug("get: id=" + idInCluster);
-		MemcachedSessionData data = null;
 		byte[] raw = null;
 		try {
 			Future<byte[]> f = getConnection().asyncGet(mangleKey(idInCluster), tc);
@@ -356,64 +326,37 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 		} catch (Exception error) {
 			log.warn("unable to get key: id=" + idInCluster, error);
 		}
-		if (raw == null) {
-			return null;
-		}
-		try {
-			data = MemcachedSessionData.unpack(raw);
-		} catch (Exception error) {
-			String str = Arrays.toString(raw);
-			log.warn("unable to unpack data get from memcached: id=" + idInCluster + ", raw=" + str + ", data=" + data, error);
-		}
-		return data;
+		return raw;
 	}
 
-	protected boolean setKey(String idInCluster, MemcachedSessionData data) {
-		return setKey(idInCluster, data, getDefaultExpiry());
+	protected boolean setKey(String idInCluster, byte[] raw) {
+		return setKey(idInCluster, raw, getDefaultExpiry());
 	}
 
-	protected boolean setKey(String idInCluster, MemcachedSessionData data, int expiry) {
+	protected boolean setKey(String idInCluster, byte[] raw, int expiry) {
 		log.debug("set: id=" + idInCluster + ", expiry=" + expiry);
 		boolean result = false;
-		byte[] raw = null;
-		try {
-			raw = MemcachedSessionData.pack(data);
-		} catch (Exception error) {
-			log.warn("unable to pack data for set to memcached: id=" + idInCluster + ", data=" + data, error);
-		}
-		if (raw == null) {
-			return false;
-		}
 		try {
 			Future<Boolean> f = getConnection().set(mangleKey(idInCluster), expiry, raw, tc);
 			result = f.get(_timeoutInMs, TimeUnit.MILLISECONDS);
 		} catch (Exception error) {
-			log.warn("unable to set key: id=" + idInCluster + ", data=" + data, error);
+			log.warn("unable to set key: id=" + idInCluster, error);
 		}
 		return result;
 	}
 
-	protected boolean addKey(String idInCluster, MemcachedSessionData data) {
-		return addKey(idInCluster, data, getDefaultExpiry());
+	protected boolean addKey(String idInCluster, byte[] raw) {
+		return addKey(idInCluster, raw, getDefaultExpiry());
 	}
 
-	protected boolean addKey(String idInCluster, MemcachedSessionData data, int expiry) {
+	protected boolean addKey(String idInCluster, byte[] raw, int expiry) {
 		log.debug("add: id=" + idInCluster + ", expiry=" + expiry);
 		boolean result = false;
-		byte[] raw = null;
-		try {
-			raw = MemcachedSessionData.pack(data);
-		} catch (Exception error) {
-			log.warn("unable to pack data for add to memcached: id=" + idInCluster + ", data=" + data, error);
-		}
-		if (raw == null) {
-			return false;
-		}
 		try {
 			Future<Boolean> f = getConnection().add(mangleKey(idInCluster), expiry, raw, tc);
 			result = f.get(_timeoutInMs, TimeUnit.MILLISECONDS);
 		} catch (Exception error) {
-			log.warn("unable to add key: id=" + idInCluster + ", data=" + data, error);
+			log.warn("unable to add key: id=" + idInCluster, error);
 		}
 		return result;
 	}

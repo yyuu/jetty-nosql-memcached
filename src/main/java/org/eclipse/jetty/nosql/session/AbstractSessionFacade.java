@@ -35,12 +35,12 @@ public abstract class AbstractSessionFacade {
 		return pack(session, getTranscoder());
 	}
 
-	public byte[] pack(ISerializableSession session, ISerializationTranscoder tc) {
+	public byte[] pack(ISerializableSession session, ISerializationTranscoder tc) throws TranscoderException {
 		byte[] raw = null;
 		try {
 			raw = tc.encode(session);
 		} catch (Exception error) {
-			System.err.println(getClass().getName().toString() + "#pack: " + error);
+			throw(new TranscoderException(error));
 		}
 		return raw;
 	}
@@ -54,7 +54,7 @@ public abstract class AbstractSessionFacade {
 		try {
 			session = tc.decode(raw, KryoSession.class);
 		} catch (Exception error) {
-			System.err.println(getClass().getName().toString() + "#unpack: " + error);
+			throw(new TranscoderException(error));
 		}
 		return session;
 	}

@@ -12,6 +12,11 @@ import java.io.Serializable;
 
 import org.eclipse.jetty.server.session.AbstractSession;
 
+/**
+ * @deprecated
+ * @author yyuu
+ *
+ */
 public class MemcachedSessionData implements Serializable {
 	private static final long serialVersionUID = -3998063962105675446L;
 	public String _id = "";
