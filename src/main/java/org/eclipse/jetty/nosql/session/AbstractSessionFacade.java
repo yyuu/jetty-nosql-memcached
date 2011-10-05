@@ -1,17 +1,61 @@
 package org.eclipse.jetty.nosql.session;
 
+import org.eclipse.jetty.nosql.session.kryo.KryoSession;
 import org.eclipse.jetty.server.session.AbstractSession;
 
 public abstract class AbstractSessionFacade {
-	public abstract ISerializableSession create();
+	protected AbstractSessionFactory sessionFactory;
+	protected ISerializationTranscoder transcoder;
 
-	public abstract ISerializableSession create(String sessionId);
+	public AbstractSessionFactory getSessionFactory() {
+		return sessionFactory;
+	}
 
-	public abstract ISerializableSession create(String sessionId, long created);
+	public ISerializationTranscoder getTranscoder() {
+		return transcoder;
+	}
 
-	public abstract ISerializableSession create(AbstractSession session);
+	public ISerializableSession create() {
+		return getSessionFactory().create();
+	}
 
-	public abstract byte[] pack(ISerializableSession session);
+	public ISerializableSession create(String sessionId) {
+		return getSessionFactory().create(sessionId);
+	}
 
-	public abstract ISerializableSession unpack(byte[] raw);
+	public ISerializableSession create(String sessionId, long created) {
+		return getSessionFactory().create(sessionId, created);
+	}
+
+	public ISerializableSession create(AbstractSession session) {
+		return getSessionFactory().create(session);
+	}
+
+	public byte[] pack(ISerializableSession session) {
+		return pack(session, getTranscoder());
+	}
+
+	public byte[] pack(ISerializableSession session, ISerializationTranscoder tc) {
+		byte[] raw = null;
+		try {
+			raw = tc.encode(session);
+		} catch (Exception error) {
+			System.err.println(getClass().getName().toString() + "#pack: " + error);
+		}
+		return raw;
+	}
+
+	public ISerializableSession unpack(byte[] raw) {
+		return unpack(raw, getTranscoder());
+	}
+
+	public ISerializableSession unpack(byte[] raw, ISerializationTranscoder tc) {
+		ISerializableSession session = null;
+		try {
+			session = tc.decode(raw, KryoSession.class);
+		} catch (Exception error) {
+			System.err.println(getClass().getName().toString() + "#unpack: " + error);
+		}
+		return session;
+	}
 }
