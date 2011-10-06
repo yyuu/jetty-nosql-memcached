@@ -5,9 +5,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import org.eclipse.jetty.nosql.session.ISerializationTranscoder;
+import org.eclipse.jetty.nosql.session.TranscoderException;
 
 public class SerializableTranscoder implements ISerializationTranscoder {
-	public byte[] encode(Object obj) throws Exception {
+	public byte[] encode(Object obj) throws TranscoderException {
 		if (obj == null) {
 			return null;
 		}
@@ -18,13 +19,13 @@ public class SerializableTranscoder implements ISerializationTranscoder {
 			oos.writeObject(obj);
 			raw = baos.toByteArray();
 		} catch (Exception error) {
-			throw(error);
+			throw(new TranscoderException(error));
 		}
 		return raw;
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T> T decode(byte[] raw, Class<T> klass) throws Exception {
+	public <T> T decode(byte[] raw, Class<T> klass) throws TranscoderException {
 		if (raw == null) {
 			return null;
 		}
@@ -34,7 +35,7 @@ public class SerializableTranscoder implements ISerializationTranscoder {
 			ObjectInputStream ois = new ObjectInputStream(bais);
 			obj = ois.readObject();
 		} catch (Exception error) {
-			throw(error);
+			throw(new TranscoderException(error));
 		}
 		return (T) obj;
 	}
