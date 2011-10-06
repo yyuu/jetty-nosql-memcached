@@ -1,3 +1,9 @@
+2011-10-06 Yamashita Yuu <yamashita@geishatokyo.com>
+	* Release: 0.1.0
+	* CAUTION: incompatible session format with previous releases. all sessions will be discarded.
+	* Implemented pluggable session format. Supported formats are Java Serializable and Kryo.
+	  https://github.com/yyuu/jetty-nosql-memcached-kryo
+
 2011-10-04 Yamashita Yuu <yamashita@geishatokyo.com>
 	* Release: 0.0.4
 	* Removed scavenger thread. Now using record expiration of memcached for scavenge.
