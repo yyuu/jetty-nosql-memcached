@@ -1,6 +1,5 @@
 package org.eclipse.jetty.nosql.session;
 
-import org.eclipse.jetty.nosql.session.kryo.KryoSession;
 import org.eclipse.jetty.server.session.AbstractSession;
 
 public abstract class AbstractSessionFacade {
@@ -35,27 +34,11 @@ public abstract class AbstractSessionFacade {
 		return pack(session, getTranscoder());
 	}
 
-	public byte[] pack(ISerializableSession session, ISerializationTranscoder tc) throws TranscoderException {
-		byte[] raw = null;
-		try {
-			raw = tc.encode(session);
-		} catch (Exception error) {
-			throw(new TranscoderException(error));
-		}
-		return raw;
-	}
+	public abstract byte[] pack(ISerializableSession session, ISerializationTranscoder tc) throws TranscoderException;
 
 	public ISerializableSession unpack(byte[] raw) {
 		return unpack(raw, getTranscoder());
 	}
 
-	public ISerializableSession unpack(byte[] raw, ISerializationTranscoder tc) {
-		ISerializableSession session = null;
-		try {
-			session = tc.decode(raw, KryoSession.class);
-		} catch (Exception error) {
-			throw(new TranscoderException(error));
-		}
-		return session;
-	}
+	public abstract ISerializableSession unpack(byte[] raw, ISerializationTranscoder tc) throws TranscoderException;
 }

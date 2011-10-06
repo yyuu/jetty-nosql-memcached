@@ -58,7 +58,6 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 			this._cookiePath = cookiePath;
 		}
 		if (sessionFacade == null) {
-//			sessionFacade = new KryoSessionFacade();
 			sessionFacade = new SerializableSessionFacade();
 		}
 	}

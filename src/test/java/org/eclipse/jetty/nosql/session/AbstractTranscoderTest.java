@@ -1,5 +1,7 @@
 package org.eclipse.jetty.nosql.session;
 
+import java.io.Serializable;
+import java.util.Arrays;
 import java.util.HashMap;
 import junit.framework.TestCase;
 
@@ -9,7 +11,7 @@ public abstract class AbstractTranscoderTest extends TestCase {
 	public void setUp() throws Exception {
 		transcoder = createTranscoder();
 	}
-	
+
 	public abstract ISerializationTranscoder createTranscoder();
 
 	public void testInt() throws Exception {
@@ -27,7 +29,16 @@ public abstract class AbstractTranscoderTest extends TestCase {
 		assertNotNull(raw);
 		float f2 = transcoder.decode(raw, Float.class).floatValue();
 		assertNotNull(f2);
-		assertEquals(f1, f2);
+		assertEquals(f1, f2, 0.1);
+	}
+
+	public void testDouble() throws Exception {
+		double d1 = 3.1415926;
+		byte[] raw = transcoder.encode(d1);
+		assertNotNull(raw);
+		double d2 = transcoder.decode(raw,  Double.class).doubleValue();
+		assertNotNull(d2);
+		assertEquals(d1, d2, 0.1);
 	}
 
 	public void testString() throws Exception {
@@ -39,8 +50,22 @@ public abstract class AbstractTranscoderTest extends TestCase {
 		assertEquals(str1, str2);
 	}
 
-	public void testArray() throws Exception {
-		// TODO:
+	public void testByteArray() throws Exception {
+		byte[] bs1 = {11, 22, 33, 44, 55};
+		byte[] raw = transcoder.encode(bs1);
+		assertNotNull(raw);
+		byte[] bs2 = transcoder.decode(raw, byte[].class);
+		assertNotNull(bs2);
+		assertTrue(Arrays.equals(bs1, bs2));
+	}
+
+	public void testStringArray() throws Exception {
+		String[] ss1 = {"foo", "bar", "baz"};
+		byte[] raw = transcoder.encode(ss1);
+		assertNotNull(raw);
+		String[] ss2 = transcoder.decode(raw, String[].class);
+		assertNotNull(ss2);
+		assertTrue(Arrays.equals(ss1, ss2));
 	}
 
 	public void testMap() throws Exception {
@@ -57,6 +82,44 @@ public abstract class AbstractTranscoderTest extends TestCase {
 	}
 
 	public void testPojo() throws Exception {
-		// TODO:
+		Pojo pojo1 = new Pojo("xxx", 1111, 2.2222);
+		byte[] raw = transcoder.encode(pojo1);
+		assertNotNull(raw);
+		Pojo pojo2 = transcoder.decode(raw, Pojo.class);
+		assertNotNull(pojo2);
+		assertEquals(pojo1.getFoo(), pojo2.getFoo());
+		assertEquals(pojo1.getBar(), pojo2.getBar());
+		assertEquals(pojo1.getBaz(), pojo2.getBaz(), 0.1);
+
+		Pojo pojo3 = new Pojo("zzz", 3333, 4.4444);
+		assertFalse(pojo1.getFoo().equals(pojo3.getFoo()));
+		assertFalse(pojo1.getBar() == pojo3.getBar());
+		assertFalse(pojo1.getBaz() == pojo3.getBaz());
+	}
+}
+
+class Pojo implements Serializable {
+	private static final long serialVersionUID = 1624917957114907302L;
+	public String foo;
+	protected int bar;
+	private double baz;
+	public Pojo() {
+		foo = "foo value";
+		bar = 2222;
+		baz = 3.333;
+	}
+	public Pojo(String f1, int b1, double b2) {
+		foo = f1;
+		bar = b1;
+		baz = b2;
+	}
+	public String getFoo() {
+		return foo;
+	}
+	public int getBar() {
+		return bar;
+	}
+	public double getBaz() {
+		return baz;
 	}
 }
