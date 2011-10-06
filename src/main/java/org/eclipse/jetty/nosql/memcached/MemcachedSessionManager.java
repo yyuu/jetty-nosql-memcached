@@ -39,6 +39,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 	/*------------------------------------------------------------ */
 	@Override
 	public void doStart() throws Exception {
+		log.info("starting...");
 		super.doStart();
 		if (_cookieDomain == null) {
 			String[] cookieDomains = getContextHandler().getVirtualHosts();
@@ -60,6 +61,16 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 		if (sessionFacade == null) {
 			sessionFacade = new SerializableSessionFacade();
 		}
+		log.info("started.");
+	}
+
+	@Override
+	public void doStop() throws Exception {
+		// override doStop() and invalidatedSessions() to skip invoking NoSqlSessionManager#invalidatedSeessions()
+		// we do not want to invalidate all sessions on servlets restart.
+		log.info("stopping...");
+		super.doStop();
+		log.info("stopped.");
 	}
 
 	/* ------------------------------------------------------------ */
@@ -191,9 +202,9 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 	/*------------------------------------------------------------ */
 	@Override
 	protected synchronized NoSqlSession loadSession(String clusterId) {
+		log.debug("loadSession: loading: id=" + clusterId);
 		ISerializableSession data = getKey(clusterId);
-
-		log.debug("loaded " + data);
+		log.debug("loadSession: loaded: id=" + clusterId + ", data=" + data);
 
 		if (data == null) {
 			return null;
@@ -201,6 +212,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 
 		boolean valid = data.isValid();
 		if (!valid) {
+			log.debug("loadSession: id=" + clusterId + ", data="+ data + " has been invalidated.");
 			return null;
 		}
 
@@ -265,6 +277,7 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 	protected void invalidateSessions() throws Exception {
 		// do nothing.
 		// we do not want to invalidate all sessions on doStop().
+		log.debug("invalidateSessions: nothing to do.");
 	}
 
 	/*------------------------------------------------------------ */

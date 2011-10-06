@@ -232,18 +232,21 @@ public class MemcachedSessionIdManager extends AbstractSessionIdManager {
 	/* ------------------------------------------------------------ */
 	@Override
 	protected void doStart() throws Exception {
-		log.debug("starting");
+		log.info("starting...");
 		super.doStart();
+		log.info("started.");
 	}
 
 	/* ------------------------------------------------------------ */
 	@Override
 	protected void doStop() throws Exception {
+		log.info("stopping...");
 		if (_connection != null) {
 			_connection.shutdown();
 			_connection = null;
 		}
 		super.doStop();
+		log.info("stopped.");
 	}
 
 	/* ------------------------------------------------------------ */

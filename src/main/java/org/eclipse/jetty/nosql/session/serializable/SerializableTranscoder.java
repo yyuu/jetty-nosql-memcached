@@ -4,6 +4,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+
+import org.eclipse.jetty.nosql.session.ClassLoadingObjectInputStream;
 import org.eclipse.jetty.nosql.session.ISerializationTranscoder;
 import org.eclipse.jetty.nosql.session.TranscoderException;
 
@@ -32,7 +34,7 @@ public class SerializableTranscoder implements ISerializationTranscoder {
 		Object obj = null;
 		try {
 			ByteArrayInputStream bais = new ByteArrayInputStream(raw);
-			ObjectInputStream ois = new ObjectInputStream(bais);
+			ObjectInputStream ois = new ClassLoadingObjectInputStream(bais);
 			obj = ois.readObject();
 		} catch (Exception error) {
 			throw(new TranscoderException(error));
