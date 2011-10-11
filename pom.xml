@@ -12,12 +12,6 @@
 	</properties>
 	<dependencies>
 		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>${junit.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
 			<groupId>org.eclipse.jetty</groupId>
 			<artifactId>jetty-jmx</artifactId>
 			<version>${jetty.version}</version>
@@ -33,12 +27,6 @@
 			<artifactId>jetty-server</artifactId>
 			<version>${jetty.version}</version>
 			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.eclipse.jetty.tests</groupId>
-			<artifactId>test-sessions-common</artifactId>
-			<version>${jetty.version}</version>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>spy</groupId>
