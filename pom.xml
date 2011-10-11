@@ -6,7 +6,7 @@
 	<name>jetty-nosql-memcached</name>
 	<groupId>com.geishatokyo.jetty</groupId>
 	<properties>
-		<jetty.version>8.0.0.RC0</jetty.version>
+		<jetty.version>8.0.2.v20111006</jetty.version>
 		<junit.version>4.8.1</junit.version>
 		<spy.version>2.7</spy.version>
 	</properties>
@@ -44,11 +44,6 @@
 			<groupId>spy</groupId>
 			<artifactId>spymemcached</artifactId>
 			<version>${spy.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.googlecode</groupId>
-			<artifactId>kryo</artifactId>
-			<version>1.04</version>
 		</dependency>
 	</dependencies>
 	<build>
