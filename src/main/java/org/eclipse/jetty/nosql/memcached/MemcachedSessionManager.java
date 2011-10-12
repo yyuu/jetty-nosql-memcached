@@ -103,14 +103,9 @@ public class MemcachedSessionManager extends NoSqlSessionManager {
 			if (session.isValid()) {
 				data = getSessionFacade().create(session);
 			} else {
-				Log.warn("save: try to recover attributes of invalidated session: id=" + session.getId());
-				data = getKey(session.getId());
-				if (data == null) {
-					data = getSessionFacade().create(session.getId(), session.getCreationTime());
-				}
-				if (data.isValid()) {
-					data.setValid(false);
-				}
+				log.warn("save: could not recover attributes of invalidated session: id=" + session.getId());
+				data = getSessionFacade().create(session.getId(), session.getCreationTime());
+				data.setValid(false);
 			}
 			data.setDomain(_cookieDomain);
 			data.setPath(_cookiePath);
