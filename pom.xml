@@ -1,14 +1,19 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.geishatokyo.jetty</groupId>
+		<artifactId>jetty-nosql-memcached-parent</artifactId>
+		<version>0.1.1-SNAPSHOT</version>
+	</parent>
+	<groupId>com.geishatokyo.jetty</groupId>
 	<artifactId>jetty-nosql-memcached</artifactId>
 	<version>0.1.1-SNAPSHOT</version>
 	<name>jetty-nosql-memcached</name>
-	<groupId>com.geishatokyo.jetty</groupId>
 	<properties>
+<!--
 		<jetty.version>8.0.2.v20111006</jetty.version>
-		<junit.version>4.8.1</junit.version>
-		<spy.version>2.7</spy.version>
+  -->
 	</properties>
 	<dependencies>
 		<dependency>
@@ -31,7 +36,7 @@
 		<dependency>
 			<groupId>spy</groupId>
 			<artifactId>spymemcached</artifactId>
-			<version>${spy.version}</version>
+			<version>2.7</version>
 		</dependency>
 	</dependencies>
 	<build>
