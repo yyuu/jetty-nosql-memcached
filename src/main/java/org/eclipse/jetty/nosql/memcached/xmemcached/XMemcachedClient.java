@@ -1,26 +1,26 @@
-package org.eclipse.jetty.nosql.memcached.spymemcached;
+package org.eclipse.jetty.nosql.memcached.xmemcached;
 
 import java.io.IOException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
-import net.spy.memcached.AddrUtil;
-import net.spy.memcached.MemcachedClient;
-import net.spy.memcached.transcoders.Transcoder;
+import net.rubyeye.xmemcached.MemcachedClient;
+import net.rubyeye.xmemcached.XMemcachedClientBuilder;
+import net.rubyeye.xmemcached.transcoders.Transcoder;
+import net.rubyeye.xmemcached.utils.AddrUtil;
 
 import org.eclipse.jetty.nosql.kvs.AbstractKeyValueStoreClient;
 import org.eclipse.jetty.nosql.kvs.KeyValueStoreClientException;
 
-public class SpyMemcachedClient extends AbstractKeyValueStoreClient {
+public class XMemcachedClient extends AbstractKeyValueStoreClient {
 	private static final int FOREVER = 0;
+	private XMemcachedClientBuilder _builder = null;
 	private MemcachedClient _connection = null;
 	private Transcoder<byte[]> _transcoder = null;
 
-	public SpyMemcachedClient() {
+	public XMemcachedClient() {
 		this("127.0.0.1:11211");
 	}
 
-	public SpyMemcachedClient(String serverString) {
+	public XMemcachedClient(String serverString) {
 		super(serverString);
 		this._transcoder = new NullTranscoder();
 	}
@@ -28,14 +28,17 @@ public class SpyMemcachedClient extends AbstractKeyValueStoreClient {
 	@Override
 	public boolean establish() throws KeyValueStoreClientException {
 		if (_connection != null) {
-			if (_connection.isAlive()) {
+			if (!_connection.isShutdown()) {
 				return true;
 			} else {
 				shutdown();
 			}
 		}
+		
+		this._builder = new XMemcachedClientBuilder(AddrUtil.getAddresses(_serverString));
+		_builder.setTranscoder(_transcoder);
 		try {
-			this._connection = new MemcachedClient(AddrUtil.getAddresses(_serverString));
+			this._connection = _builder.build();
 		} catch (IOException error) {
 			throw(new KeyValueStoreClientException(error));
 		}
@@ -45,15 +48,20 @@ public class SpyMemcachedClient extends AbstractKeyValueStoreClient {
 	@Override
 	public boolean shutdown() throws KeyValueStoreClientException {
 		if (_connection != null) {
-			_connection.shutdown();
-			_connection = null;
+			try {
+				_connection.shutdown();
+			} catch (IOException error) {
+				throw(new KeyValueStoreClientException(error));
+			} finally {
+				_connection = null;
+			}
 		}
 		return true;
 	}
 
 	@Override
 	public boolean isAlive() {
-		return _connection != null && _connection.isAlive();
+		return this._connection != null && !this._connection.isShutdown();
 	}
 
 	@Override
@@ -63,8 +71,7 @@ public class SpyMemcachedClient extends AbstractKeyValueStoreClient {
 		}
 		byte[] raw = null;
 		try {
-			Future<byte[]> f = _connection.asyncGet(key, _transcoder);
-			raw = f.get(_timeoutInMs, TimeUnit.MILLISECONDS);
+			raw = _connection.get(key);
 		} catch (Exception error) {
 			throw(new KeyValueStoreClientException(error));
 		}
@@ -83,8 +90,7 @@ public class SpyMemcachedClient extends AbstractKeyValueStoreClient {
 		}
 		boolean result = false;
 		try {
-			Future<Boolean> f = _connection.set(key, exp, raw, _transcoder);
-			result = f.get(_timeoutInMs, TimeUnit.MILLISECONDS);
+			result = _connection.set(key, exp, raw);
 		} catch (Exception error) {
 			throw(new KeyValueStoreClientException(error));
 		}
@@ -103,8 +109,7 @@ public class SpyMemcachedClient extends AbstractKeyValueStoreClient {
 		}
 		boolean result = false;
 		try {
-			Future<Boolean> f = _connection.add(key, exp, raw, _transcoder);
-			result = f.get(_timeoutInMs, TimeUnit.MILLISECONDS);
+			result = _connection.add(key, exp, raw);
 		} catch (Exception error) {
 			throw(new KeyValueStoreClientException(error));
 		}
@@ -118,8 +123,7 @@ public class SpyMemcachedClient extends AbstractKeyValueStoreClient {
 		}
 		boolean result = false;
 		try {
-			Future<Boolean> f = _connection.delete(key);
-			result = f.get(_timeoutInMs, TimeUnit.MILLISECONDS);
+			result = _connection.delete(key);
 		} catch (Exception error) {
 			throw(new KeyValueStoreClientException(error));
 		}

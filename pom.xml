@@ -47,6 +47,11 @@
 			<artifactId>jetty-nosql-kvs</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>com.googlecode.xmemcached</groupId>
+			<artifactId>xmemcached</artifactId>
+			<version>1.3.5</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>

@@ -17,13 +17,10 @@ public class NullTranscoder extends SpyObject implements Transcoder<byte[]> {
 	}
 
 	public byte[] decode(CachedData d) {
-		if (flags == d.getFlags()) {
-			return d.getData();
-		} else {
-			getLogger().error("Unexpected flags for long:  "
-				+ d.getFlags() + " wanted " + flags);
+		if (d == null) {
 			return null;
 		}
+		return d.getData();
 	}
 
 	public int getMaxSize() {

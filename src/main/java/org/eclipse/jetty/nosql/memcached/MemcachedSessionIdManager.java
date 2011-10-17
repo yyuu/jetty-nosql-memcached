@@ -2,9 +2,11 @@ package org.eclipse.jetty.nosql.memcached;
 
 import java.io.IOException;
 
-import org.eclipse.jetty.nosql.kvs.KeyValueStoreClient;
+import org.eclipse.jetty.nosql.kvs.AbstractKeyValueStoreClient;
+import org.eclipse.jetty.nosql.kvs.IKeyValueStoreClient;
 import org.eclipse.jetty.nosql.kvs.KeyValueStoreSessionIdManager;
 import org.eclipse.jetty.nosql.memcached.spymemcached.SpyMemcachedClient;
+//import org.eclipse.jetty.nosql.memcached.xmemcached.XMemcachedClient;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.util.log.Log;
 import org.eclipse.jetty.util.log.Logger;
@@ -35,23 +37,31 @@ public class MemcachedSessionIdManager extends KeyValueStoreSessionIdManager {
 	}
 
 	public String getServerString() {
-		return ((SpyMemcachedClient)this._client).getServerString();
+		return getClient().getServerString();
 	}
 
 	public void setServerString(String serverString) {
-		((SpyMemcachedClient)this._client).setServerString(serverString);
+		getClient().setServerString(serverString);
 	}
 
 	public int getTimeoutInMs() {
-		return ((SpyMemcachedClient)this._client).getTimeoutInMs();
+		return getClient().getTimeoutInMs();
 	}
 
 	public void setTimeoutInMs(int timeoutInMs) {
-		((SpyMemcachedClient)this._client).setTimeoutInMs(timeoutInMs);
+		getClient().setTimeoutInMs(timeoutInMs);
 	}
 
 	@Override
-	protected KeyValueStoreClient newClient(String serverString) {
+	protected IKeyValueStoreClient newClient(String serverString) {
 		return new SpyMemcachedClient(serverString);
+	}
+//	@Override
+//	protected IKeyValueStoreClient newClient(String serverString) {
+//		return new XMemcachedClient(serverString);
+//	}
+
+	private AbstractKeyValueStoreClient getClient() {
+		return (AbstractKeyValueStoreClient) this._client;
 	}
 }
