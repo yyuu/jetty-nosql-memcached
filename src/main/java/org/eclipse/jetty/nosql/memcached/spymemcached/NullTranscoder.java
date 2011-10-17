@@ -1,4 +1,4 @@
-package org.eclipse.jetty.nosql.memcached;
+package org.eclipse.jetty.nosql.memcached.spymemcached;
 
 import net.spy.memcached.CachedData;
 import net.spy.memcached.compat.SpyObject;
