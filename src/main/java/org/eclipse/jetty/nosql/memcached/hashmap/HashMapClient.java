@@ -58,16 +58,16 @@ public class HashMapClient extends AbstractKeyValueStoreClient {
 		if (!isAlive()) {
 			throw(new KeyValueStoreClientException(new IllegalStateException("client not established")));
 		}
-
 		byte[] raw = null;
-		Entry entry = data.get(key);
-		if ( entry != null) {
-			long exp = entry.getExpiry();
-			long now = System.currentTimeMillis();
-			if (now < exp || exp == FOREVER) {
-				raw = entry.getData();
-			} else {
-				delete(key);
+		synchronized(data) {
+			Entry entry = data.get(key);
+			if ( entry != null) {
+				long exp = entry.getExpiry();
+				if (System.currentTimeMillis() < exp || exp == FOREVER) {
+					raw = entry.getData();
+				} else {
+					data.remove(key);
+				}
 			}
 		}
 		return raw;
@@ -83,22 +83,7 @@ public class HashMapClient extends AbstractKeyValueStoreClient {
 		if (!isAlive()) {
 			throw(new KeyValueStoreClientException(new IllegalStateException("client not established")));
 		}
-
-		// the actual value sent may either be Unix time (number of seconds since
-		// January 1, 1970, as a 32-bit value), or a number of seconds starting 
-		// from current time. In the latter case, this number of seconds may not
-		// exceed 60*60*24*30 (number of seconds in 30 days); if the number sent
-		// by a client is larger than that, the server will consider it to be real
-		// Unix time value rather than an offset from current time.
-		// http://code.sixapart.com/svn/memcached/trunk/server/doc/protocol.txt
-		long timestamp;
-		if (exp < 60*60*24*30) { // relative time
-			long now = System.currentTimeMillis();
-			timestamp = now+TimeUnit.SECONDS.toMillis(exp);
-		} else { // absolute time
-			timestamp = TimeUnit.SECONDS.toMillis(exp);
-		}
-		data.put(key, new Entry(raw, timestamp));
+		data.put(key, new Entry(raw, expiryTimeMillis(exp)));
 		return true;
 	}
 
@@ -112,10 +97,12 @@ public class HashMapClient extends AbstractKeyValueStoreClient {
 		if (!isAlive()) {
 			throw(new KeyValueStoreClientException(new IllegalStateException("client not established")));
 		}
-
-		boolean notExists = !data.containsKey(key);
-		if (notExists) {
-			set(key, raw, exp);
+		boolean notExists = false;
+		synchronized(data) {
+			notExists = !data.containsKey(key);
+			if (notExists) {
+				data.put(key, new Entry(raw, expiryTimeMillis(exp)));
+			}
 		}
 		return notExists;
 	}
@@ -125,9 +112,24 @@ public class HashMapClient extends AbstractKeyValueStoreClient {
 		if (!isAlive()) {
 			throw(new KeyValueStoreClientException(new IllegalStateException("client not established")));
 		}
-
 		data.remove(key);
-
 		return true;
+	}
+
+	private long expiryTimeMillis(int exp) {
+		// the actual value sent may either be Unix time (number of seconds since
+		// January 1, 1970, as a 32-bit value), or a number of seconds starting 
+		// from current time. In the latter case, this number of seconds may not
+		// exceed 60*60*24*30 (number of seconds in 30 days); if the number sent
+		// by a client is larger than that, the server will consider it to be real
+		// Unix time value rather than an offset from current time.
+		// http://code.sixapart.com/svn/memcached/trunk/server/doc/protocol.txt
+		long timestamp;
+		if (exp < 60*60*24*30) { // relative time
+			timestamp = System.currentTimeMillis()+TimeUnit.SECONDS.toMillis(exp);
+		} else { // absolute time
+			timestamp = TimeUnit.SECONDS.toMillis(exp);
+		}
+		return timestamp;
 	}
 }
