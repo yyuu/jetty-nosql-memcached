@@ -5,21 +5,26 @@ import java.io.IOException;
 import org.eclipse.jetty.nosql.kvs.AbstractKeyValueStoreClient;
 import org.eclipse.jetty.nosql.kvs.IKeyValueStoreClient;
 import org.eclipse.jetty.nosql.kvs.KeyValueStoreSessionIdManager;
-import org.eclipse.jetty.nosql.memcached.spymemcached.SpyMemcachedClient;
-//import org.eclipse.jetty.nosql.memcached.xmemcached.XMemcachedClient;
+import org.eclipse.jetty.nosql.memcached.spymemcached.SpyMemcachedClientFactory;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.util.log.Log;
 import org.eclipse.jetty.util.log.Logger;
 
 public class MemcachedSessionIdManager extends KeyValueStoreSessionIdManager {
 	private final static Logger log = Log.getLogger("org.eclipse.jetty.nosql.memcached.MemcachedSessionIdManager");
+	private AbstractMemcachedClientFactory _clientFactory = null;
 
 	public MemcachedSessionIdManager(Server server) throws IOException {
 		this(server, "127.0.0.1:11211");
 	}
 
 	public MemcachedSessionIdManager(Server server, String serverString) throws IOException {
+		this(server, serverString, null);
+	}
+
+	public MemcachedSessionIdManager(Server server, String serverString, AbstractMemcachedClientFactory cf) throws IOException {
 		super(server, serverString);
+		_clientFactory = cf != null ? cf : new SpyMemcachedClientFactory();
 	}
 
 	@Override
@@ -54,12 +59,8 @@ public class MemcachedSessionIdManager extends KeyValueStoreSessionIdManager {
 
 	@Override
 	protected IKeyValueStoreClient newClient(String serverString) {
-		return new SpyMemcachedClient(serverString);
+		return _clientFactory.create(serverString);
 	}
-//	@Override
-//	protected IKeyValueStoreClient newClient(String serverString) {
-//		return new XMemcachedClient(serverString);
-//	}
 
 	private AbstractKeyValueStoreClient getClient() {
 		return (AbstractKeyValueStoreClient) this._client;
