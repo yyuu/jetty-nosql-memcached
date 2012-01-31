@@ -41,28 +41,10 @@ public class MemcachedSessionIdManager extends KeyValueStoreSessionIdManager {
 		log.info("stopped.");
 	}
 
-	public String getServerString() {
-		return getClient().getServerString();
-	}
-
-	public void setServerString(String serverString) {
-		getClient().setServerString(serverString);
-	}
-
-	public int getTimeoutInMs() {
-		return getClient().getTimeoutInMs();
-	}
-
-	public void setTimeoutInMs(int timeoutInMs) {
-		getClient().setTimeoutInMs(timeoutInMs);
-	}
-
 	@Override
-	protected IKeyValueStoreClient newClient(String serverString) {
-		return _clientFactory.create(serverString);
-	}
-
-	private AbstractKeyValueStoreClient getClient() {
-		return (AbstractKeyValueStoreClient) this._client;
+	protected AbstractKeyValueStoreClient newClient(String serverString) {
+		AbstractKeyValueStoreClient client = _clientFactory.create(serverString);
+		client.setTimeoutInMs(getTimeoutInMs());
+		return client;
 	}
 }
