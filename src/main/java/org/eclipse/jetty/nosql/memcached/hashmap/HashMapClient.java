@@ -9,7 +9,7 @@ import org.eclipse.jetty.nosql.kvs.KeyValueStoreClientException;
 
 // intend to use this as test mock
 public class HashMapClient extends AbstractKeyValueStoreClient {
-	class Entry {
+	static class Entry {
 		private byte[] data = null;
 		private long expiry = 0;
 		Entry(byte[] raw, long exp) {
