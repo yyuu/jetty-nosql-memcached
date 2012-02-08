@@ -3,7 +3,6 @@ package org.eclipse.jetty.nosql.memcached;
 import java.io.IOException;
 
 import org.eclipse.jetty.nosql.kvs.AbstractKeyValueStoreClient;
-import org.eclipse.jetty.nosql.kvs.IKeyValueStoreClient;
 import org.eclipse.jetty.nosql.kvs.KeyValueStoreSessionIdManager;
 import org.eclipse.jetty.nosql.memcached.spymemcached.SpyMemcachedClientFactory;
 import org.eclipse.jetty.server.Server;
