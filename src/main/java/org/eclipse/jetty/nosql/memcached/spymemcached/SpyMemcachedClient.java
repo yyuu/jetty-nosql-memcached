@@ -5,6 +5,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import net.spy.memcached.AddrUtil;
+import net.spy.memcached.ConnectionFactory;
+import net.spy.memcached.ConnectionFactoryBuilder;
 import net.spy.memcached.MemcachedClient;
 import net.spy.memcached.transcoders.Transcoder;
 
@@ -35,11 +37,25 @@ public class SpyMemcachedClient extends AbstractKeyValueStoreClient {
 			}
 		}
 		try {
-			this._connection = new MemcachedClient(AddrUtil.getAddresses(_serverString));
+			ConnectionFactory cf = getConnectionFactory();
+			if (cf == null) {
+				this._connection = new MemcachedClient(AddrUtil.getAddresses(_serverString));
+			} else {
+				this._connection = new MemcachedClient(cf, AddrUtil.getAddresses(_serverString));
+			}
 		} catch (IOException error) {
 			throw(new KeyValueStoreClientException(error));
 		}
 		return true;
+	}
+
+	protected ConnectionFactoryBuilder getConnectionFactoryBuilder() {
+		return new ConnectionFactoryBuilder();
+	}
+
+	protected ConnectionFactory getConnectionFactory() {
+		ConnectionFactoryBuilder factoryBuilder = getConnectionFactoryBuilder();
+		return factoryBuilder.build();
 	}
 
 	@Override
@@ -61,7 +77,7 @@ public class SpyMemcachedClient extends AbstractKeyValueStoreClient {
 		if (!isAlive()) {
 			throw(new KeyValueStoreClientException(new IllegalStateException("client not established")));
 		}
-		byte[] raw = null;
+		byte[] raw;
 		try {
 			Future<byte[]> f = _connection.asyncGet(key, _transcoder);
 			raw = f.get(_timeoutInMs, TimeUnit.MILLISECONDS);
@@ -81,7 +97,7 @@ public class SpyMemcachedClient extends AbstractKeyValueStoreClient {
 		if (!isAlive()) {
 			throw(new KeyValueStoreClientException(new IllegalStateException("client not established")));
 		}
-		boolean result = false;
+		boolean result;
 		try {
 			Future<Boolean> f = _connection.set(key, exp, raw, _transcoder);
 			result = f.get(_timeoutInMs, TimeUnit.MILLISECONDS);
@@ -101,7 +117,7 @@ public class SpyMemcachedClient extends AbstractKeyValueStoreClient {
 		if (!isAlive()) {
 			throw(new KeyValueStoreClientException(new IllegalStateException("client not established")));
 		}
-		boolean result = false;
+		boolean result;
 		try {
 			Future<Boolean> f = _connection.add(key, exp, raw, _transcoder);
 			result = f.get(_timeoutInMs, TimeUnit.MILLISECONDS);
@@ -116,7 +132,7 @@ public class SpyMemcachedClient extends AbstractKeyValueStoreClient {
 		if (!isAlive()) {
 			throw(new KeyValueStoreClientException(new IllegalStateException("client not established")));
 		}
-		boolean result = false;
+		boolean result;
 		try {
 			Future<Boolean> f = _connection.delete(key);
 			result = f.get(_timeoutInMs, TimeUnit.MILLISECONDS);
