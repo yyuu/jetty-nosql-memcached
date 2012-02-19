@@ -26,8 +26,17 @@ public class SpyMemcachedClient extends AbstractKeyValueStoreClient {
 		super(serverString);
 		this._transcoder = new NullTranscoder();
 	}
-
+	
 	@Override
+	public void setServerString(String _serverString) {
+		StringBuilder serverString = new StringBuilder();
+		for (String s: _serverString.trim().split("[\\s,]+")) {
+			serverString.append((0 < serverString.length() ? " " : "") + s);
+		}
+
+		this._serverString = serverString.toString();
+	}
+
 	public boolean establish() throws KeyValueStoreClientException {
 		if (_connection != null) {
 			if (_connection.isAlive()) {
@@ -58,7 +67,6 @@ public class SpyMemcachedClient extends AbstractKeyValueStoreClient {
 		return factoryBuilder.build();
 	}
 
-	@Override
 	public boolean shutdown() throws KeyValueStoreClientException {
 		if (_connection != null) {
 			_connection.shutdown();
@@ -67,12 +75,10 @@ public class SpyMemcachedClient extends AbstractKeyValueStoreClient {
 		return true;
 	}
 
-	@Override
 	public boolean isAlive() {
 		return _connection != null && _connection.isAlive();
 	}
 
-	@Override
 	public byte[] get(String key) throws KeyValueStoreClientException {
 		if (!isAlive()) {
 			throw(new KeyValueStoreClientException(new IllegalStateException("client not established")));
@@ -87,12 +93,10 @@ public class SpyMemcachedClient extends AbstractKeyValueStoreClient {
 		return raw;
 	}
 
-	@Override
 	public boolean set(String key, byte[] raw) throws KeyValueStoreClientException {
 		return this.set(key, raw, FOREVER);
 	}
 
-	@Override
 	public boolean set(String key, byte[] raw, int exp) throws KeyValueStoreClientException {
 		if (!isAlive()) {
 			throw(new KeyValueStoreClientException(new IllegalStateException("client not established")));
@@ -107,12 +111,10 @@ public class SpyMemcachedClient extends AbstractKeyValueStoreClient {
 		return result;
 	}
 
-	@Override
 	public boolean add(String key, byte[] raw) throws KeyValueStoreClientException {
 		return this.add(key, raw, FOREVER);
 	}
 
-	@Override
 	public boolean add(String key, byte[] raw, int exp) throws KeyValueStoreClientException {
 		if (!isAlive()) {
 			throw(new KeyValueStoreClientException(new IllegalStateException("client not established")));
@@ -127,7 +129,6 @@ public class SpyMemcachedClient extends AbstractKeyValueStoreClient {
 		return result;
 	}
 
-	@Override
 	public boolean delete(String key) throws KeyValueStoreClientException {
 		if (!isAlive()) {
 			throw(new KeyValueStoreClientException(new IllegalStateException("client not established")));
