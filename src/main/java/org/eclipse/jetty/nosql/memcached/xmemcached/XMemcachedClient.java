@@ -7,10 +7,10 @@ import net.rubyeye.xmemcached.XMemcachedClientBuilder;
 import net.rubyeye.xmemcached.transcoders.Transcoder;
 import net.rubyeye.xmemcached.utils.AddrUtil;
 
-import org.eclipse.jetty.nosql.kvs.AbstractKeyValueStoreClient;
 import org.eclipse.jetty.nosql.kvs.KeyValueStoreClientException;
+import org.eclipse.jetty.nosql.memcached.AbstractMemcachedClient;
 
-public class XMemcachedClient extends AbstractKeyValueStoreClient {
+public class XMemcachedClient extends AbstractMemcachedClient {
 	private static final int FOREVER = 0;
 	private XMemcachedClientBuilder _builder = null;
 	private MemcachedClient _connection = null;
@@ -23,16 +23,6 @@ public class XMemcachedClient extends AbstractKeyValueStoreClient {
 	public XMemcachedClient(String serverString) {
 		super(serverString);
 		this._transcoder = new NullTranscoder();
-	}
-
-	@Override
-	public void setServerString(String _serverString) {
-		StringBuilder serverString = new StringBuilder();
-		for (String s: _serverString.trim().split("[\\s,]+")) {
-			serverString.append((0 < serverString.length() ? " " : "") + s);
-		}
-
-		this._serverString = serverString.toString();
 	}
 
 	public boolean establish() throws KeyValueStoreClientException {

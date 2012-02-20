@@ -10,10 +10,10 @@ import net.spy.memcached.ConnectionFactoryBuilder;
 import net.spy.memcached.MemcachedClient;
 import net.spy.memcached.transcoders.Transcoder;
 
-import org.eclipse.jetty.nosql.kvs.AbstractKeyValueStoreClient;
 import org.eclipse.jetty.nosql.kvs.KeyValueStoreClientException;
+import org.eclipse.jetty.nosql.memcached.AbstractMemcachedClient;
 
-public class SpyMemcachedClient extends AbstractKeyValueStoreClient {
+public class SpyMemcachedClient extends AbstractMemcachedClient {
 	private static final int FOREVER = 0;
 	private MemcachedClient _connection = null;
 	private Transcoder<byte[]> _transcoder = null;
@@ -25,16 +25,6 @@ public class SpyMemcachedClient extends AbstractKeyValueStoreClient {
 	public SpyMemcachedClient(String serverString) {
 		super(serverString);
 		this._transcoder = new NullTranscoder();
-	}
-	
-	@Override
-	public void setServerString(String _serverString) {
-		StringBuilder serverString = new StringBuilder();
-		for (String s: _serverString.trim().split("[\\s,]+")) {
-			serverString.append((0 < serverString.length() ? " " : "") + s);
-		}
-
-		this._serverString = serverString.toString();
 	}
 
 	public boolean establish() throws KeyValueStoreClientException {

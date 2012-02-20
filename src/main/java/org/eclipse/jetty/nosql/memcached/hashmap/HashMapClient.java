@@ -4,11 +4,11 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
-import org.eclipse.jetty.nosql.kvs.AbstractKeyValueStoreClient;
 import org.eclipse.jetty.nosql.kvs.KeyValueStoreClientException;
+import org.eclipse.jetty.nosql.memcached.AbstractMemcachedClient;
 
 // intend to use this as test mock
-public class HashMapClient extends AbstractKeyValueStoreClient {
+public class HashMapClient extends AbstractMemcachedClient {
 	static class Entry {
 		private byte[] data = null;
 		private long expiry = 0;
@@ -35,7 +35,6 @@ public class HashMapClient extends AbstractKeyValueStoreClient {
 		super(serverString);
 	}
 
-	@Override
 	public boolean establish() throws KeyValueStoreClientException {
 		if (isAlive()) {
 			shutdown();
@@ -43,17 +42,14 @@ public class HashMapClient extends AbstractKeyValueStoreClient {
 		return true;
 	}
 
-	@Override
 	public boolean shutdown() throws KeyValueStoreClientException {
 		return true;
 	}
 
-	@Override
 	public boolean isAlive() {
 		return data != null;
 	}
 
-	@Override
 	public byte[] get(String key) throws KeyValueStoreClientException {
 		if (!isAlive()) {
 			throw(new KeyValueStoreClientException(new IllegalStateException("client not established")));
@@ -73,12 +69,10 @@ public class HashMapClient extends AbstractKeyValueStoreClient {
 		return raw;
 	}
 
-	@Override
 	public boolean set(String key, byte[] raw) throws KeyValueStoreClientException {
 		return this.set(key, raw, FOREVER);
 	}
 
-	@Override
 	public boolean set(String key, byte[] raw, int exp) throws KeyValueStoreClientException {
 		if (!isAlive()) {
 			throw(new KeyValueStoreClientException(new IllegalStateException("client not established")));
@@ -87,12 +81,10 @@ public class HashMapClient extends AbstractKeyValueStoreClient {
 		return true;
 	}
 
-	@Override
 	public boolean add(String key, byte[] raw) throws KeyValueStoreClientException {
 		return this.add(key, raw, FOREVER);
 	}
 
-	@Override
 	public boolean add(String key, byte[] raw, int exp) throws KeyValueStoreClientException {
 		if (!isAlive()) {
 			throw(new KeyValueStoreClientException(new IllegalStateException("client not established")));
@@ -107,7 +99,6 @@ public class HashMapClient extends AbstractKeyValueStoreClient {
 		return notExists;
 	}
 
-	@Override
 	public boolean delete(String key) throws KeyValueStoreClientException {
 		if (!isAlive()) {
 			throw(new KeyValueStoreClientException(new IllegalStateException("client not established")));
