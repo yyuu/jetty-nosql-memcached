@@ -34,14 +34,19 @@ public class XMemcachedClient extends AbstractMemcachedClient {
 			}
 		}
 		
-		this._builder = new XMemcachedClientBuilder(AddrUtil.getAddresses(_serverString));
-		_builder.setTranscoder(_transcoder);
+		this._builder = getClientBuilder(_serverString);
 		try {
 			this._connection = _builder.build();
 		} catch (IOException error) {
 			throw(new KeyValueStoreClientException(error));
 		}
 		return true;
+	}
+
+	protected XMemcachedClientBuilder getClientBuilder(String serverString) {
+		XMemcachedClientBuilder builder =  new XMemcachedClientBuilder(AddrUtil.getAddresses(serverString));
+		builder.setTranscoder(_transcoder);
+		return builder;
 	}
 
 	public boolean shutdown() throws KeyValueStoreClientException {
