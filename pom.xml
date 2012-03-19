@@ -7,11 +7,6 @@
 	</parent>
 	<artifactId>jetty-nosql-memcached</artifactId>
 	<name>jetty-nosql-memcached</name>
-	<properties>
-<!--
-		<jetty.version>8.0.2.v20111006</jetty.version>
-  -->
-	</properties>
 	<repositories>
 		<repository>
 			<id>spy</id>
@@ -23,29 +18,30 @@
 		<dependency>
 			<groupId>org.eclipse.jetty</groupId>
 			<artifactId>jetty-jmx</artifactId>
-			<version>${jetty.version}</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.jetty</groupId>
 			<artifactId>jetty-nosql</artifactId>
-			<version>${jetty.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.jetty</groupId>
 			<artifactId>jetty-server</artifactId>
-			<version>${jetty.version}</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.geishatokyo.jetty</groupId>
+			<artifactId>jetty-nosql-kvs</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>spy</groupId>
 			<artifactId>spymemcached</artifactId>
 			<version>2.7.3</version>
-		</dependency>
-		<dependency>
-			<groupId>com.geishatokyo.jetty</groupId>
-			<artifactId>jetty-nosql-kvs</artifactId>
-			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.googlecode.xmemcached</groupId>
