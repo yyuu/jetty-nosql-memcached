@@ -7,6 +7,8 @@
 	</parent>
 	<artifactId>jetty-nosql-memcached</artifactId>
 	<name>jetty-nosql-memcached</name>
+	<description>A session manager impl for jetty to store sessions on memcached with Java serialization.</description>
+	<url>https://github.com/yyuu/jetty-nosql-memcached</url>
 	<repositories>
 		<repository>
 			<id>spy</id>
@@ -77,6 +79,36 @@
 				<configuration>
 					<source>5</source>
 					<target>5</target>
+					<encoding>UTF-8</encoding>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<doctitle>${project.name} ${project.version} API</doctitle>
+					<aggregate>true</aggregate>
+					<locale>en_US</locale>
 					<encoding>UTF-8</encoding>
 				</configuration>
 			</plugin>
