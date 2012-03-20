@@ -8,6 +8,7 @@
 	<artifactId>jetty-nosql-memcached</artifactId>
 	<name>jetty-nosql-memcached</name>
 	<description>A session manager impl for jetty to store sessions on memcached with Java serialization.</description>
+	<url>https://github.com/yyuu/jetty-nosql-memcached</url>
 	<repositories>
 		<repository>
 			<id>spy</id>
