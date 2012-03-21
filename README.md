@@ -1,6 +1,6 @@
 # jetty-nosql-memcached
 
-[![Build Status](https://secure.travis-ci.org/yyuu/jetty-nosql-memcached-parent.png?branch=master)](http://travis-ci.org/yyuu/jetty-nosql-memcached-parent)
+[![Build Status](https://secure.travis-ci.org/yyuu/jetty-nosql-memcached.png?branch=master)](http://travis-ci.org/yyuu/jetty-nosql-memcached)
 
 ## Overview
 
@@ -12,12 +12,19 @@ SessionManager implementation for Jetty based on jetty-nosql.
 All dependencies can be resolved from Maven.
 
 * jetty (8.0.0 or later)
-* spymemcached (for MemcachedSessionManager)
+* spymemcached
+* xmemcached
+* kryo
+* xstream
 
 
 ## Build
 
-See also ./BUILDING.txt
+You can build all relating projects from Maven.
+
+    $ git clone git://github.com/yyuu/jetty-nosql-memcached.git
+    $ cd jetty-nosql-memcached
+    $ mvn clean package
 
 
 ## Configuration
@@ -154,7 +161,9 @@ You can configure the behavior of session manager with following setters.
 
 ## License
 
-Copyright (c) 2011 Geisha Tokyo Entertainment, Inc.
+Copyright (c) 2011-2012 Geisha Tokyo Entertainment, Inc.
+
+Copyright (c) 2011-2012 Yamashita, Yuu <yamashita@geishatokyo.com>
 
 All rights reserved. This program and the accompanying materials
 are made available under the terms of the Eclipse Public License v1.0
@@ -165,10 +174,3 @@ The Eclipse Public License is available at http://www.eclipse.org/legal/epl-v10.
 The Apache License v2.0 is available at http://www.opensource.org/licenses/apache2.0.php
 
 You may elect to redistribute this code under either of these licenses.
-
-
-## Author
-
-Copyright (C) 2011-2012 Geisha Tokyo Entertainment, Inc.
-
-Copyright (C) 2011-2012 Yamashita, Yuu <yamashita@geishatokyo.com>
