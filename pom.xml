@@ -5,7 +5,7 @@
 	<version>0.2.2-SNAPSHOT</version>
 	<name>jetty-nosql-memcached-parent</name>
 	<description>Parent projct of jetty-nosql-memcached and relating projects.</description>
-	<url>https://github.com/yyuu/jetty-nosql-memcached-parent</url>
+	<url>https://github.com/yyuu/jetty-nosql-memcached</url>
 	<packaging>pom</packaging>
 	<properties>
 		<jetty.version>8.1.1.v20120215</jetty.version>
@@ -27,13 +27,13 @@
 		</license>
 	</licenses>
 	<scm>
-		<connection>scm:git:git://github.com/yyuu/jetty-nosql-memcached-parent.git</connection>
-		<developerConnection>scm:git:git@github.com/yyuu/jetty-nosql-memcached-parent.git</developerConnection>
-		<url>scm:git:git://github.com/yyuu/jetty-nosql-memcached-parent.git</url>
+		<connection>scm:git:git://github.com/yyuu/jetty-nosql-memcached.git</connection>
+		<developerConnection>scm:git:git@github.com/yyuu/jetty-nosql-memcached.git</developerConnection>
+		<url>scm:git:git://github.com/yyuu/jetty-nosql-memcached.git</url>
 	</scm>
 	<issueManagement>
 		<system>github</system>
-		<url>https://github.com/yyuu/jetty-nosql-memcached-parent/issues</url>
+		<url>https://github.com/yyuu/jetty-nosql-memcached/issues</url>
 	</issueManagement>
 	<developers>
 		<developer>
