@@ -1,0 +1,15 @@
+## eclipse project files
+/.classpath
+/.project
+/.settings
+
+## intellij project files
+/.idea
+/*.iml
+
+## vim files
+*.swo
+*.swp
+
+## maven artifacts
+/target
