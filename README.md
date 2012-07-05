@@ -27,6 +27,25 @@ You can build all relating projects from Maven.
     $ mvn clean package
 
 
+## Install
+
+jetty-nosql-memcached is an extension for Jetty-8.
+You have to install jars into jetty's `${jetty.home}/lib/ext`.
+
+Built jars of jetty-nosql-memcached can be found on Maven Central.
+You can install one of them without building.
+
+- http://search.maven.org/#search%7Cga%7C1%7Ca%3A%22jetty-nosql-memcached%22
+- http://search.maven.org/#search%7Cga%7C1%7Ca%3A%22jetty-nosql-memcached-kryo%22
+- http://search.maven.org/#search%7Cga%7C1%7Ca%3A%22jetty-nosql-memcached-xstream%22
+
+*NOTE*
+
+You must install jetty-nosql-memcached into Jetty with all dependent jars, such like jetty-nosql and SpyMemcached.
+If you're not sure, it's better to use all-in-one jar like "jetty-nosql-memcached-${version}-jar-with-dependencies.jar".
+You don't have to be aware of missing dependencies since all-in-one jar includes all dependencies in single jar file.
+
+
 ## Configuration
 
 You need to configure both "session manager" and "session ID manager".
