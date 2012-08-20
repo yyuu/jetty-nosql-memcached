@@ -42,7 +42,7 @@ You can install one of them without building.
 *NOTE*
 
 You must install jetty-nosql-memcached into Jetty with all dependent jars, such like jetty-nosql and SpyMemcached.
-If you're not sure, it's better to use all-in-one jar like "jetty-nosql-memcached-${version}-jar-with-dependencies.jar".
+If you're not sure, it's better to use all-in-one jar like `jetty-nosql-memcached-${version}-jar-with-dependencies.jar`.
 You don't have to be aware of missing dependencies since all-in-one jar includes all dependencies in single jar file.
 
 
@@ -53,8 +53,7 @@ You need to configure both "session manager" and "session ID manager".
 
 ### Configuring "session ID manager"
 
-SessionIdManagers can be configured in files under ${JETTY_HOME}/etc.
-In following example, using ${JETTY_HOME}/etc/jetty.xml.
+SessionIdManagers can be configured in files under `${JETTY_HOME}/etc`.  In following example, using `${JETTY_HOME}/etc/jetty.xml`.
 
     <?xml version="1.0"?>
     <Configure id="Server" class="org.eclipse.jetty.server.Server">
@@ -94,15 +93,17 @@ You can configure the behavior of session ID manager with following setters.
   * use keySuffix for session key suffix on memcached.
 * setServerString(String serverString)
   * specify server address and port in string. multiple hosts can be specified with spaces.
+* setSticky(boolean)
+  * set frontend load-balancer performs sticky sessions (session persistence) or not. true by default.
 * setTimeoutInMs(int timeoutInMS)
   * set timeout for memcached connections.
 
 
 ### Configuring "session manager"
 
-SessionManagers can be configured by either ${APP_ROOT}/WEB-INF/jetty-web.xml or ${JETTY_HOME}/context/${APP_NAME}.xml
+SessionManagers can be configured by either `${APP_ROOT}/WEB-INF/jetty-web.xml` or `${JETTY_HOME}/context/${APP_NAME}.xml`.
 
-Sample configuration for ${APP_ROOT}/WEB-INF/jetty-web.xml:
+Sample configuration for `${APP_ROOT}/WEB-INF/jetty-web.xml`:
 
     <?xml version="1.0" encoding="UTF-8"?>
     <Configure class="org.eclipse.jetty.webapp.WebAppContext">
@@ -133,7 +134,7 @@ Sample configuration for ${APP_ROOT}/WEB-INF/jetty-web.xml:
       context.setSessionHandler(new SessionHandler(sessionManager));
       -->
 
-Sample configuration for ${JETTY_HOME}/context/${APP_NAME}.xml:
+Sample configuration for `${JETTY_HOME}/context/${APP_NAME}.xml`:
 
     <?xml version="1.0"  encoding="ISO-8859-1"?>
     <!DOCTYPE Configure PUBLIC "-//Mort Bay Consulting//DTD Configure//EN" "http://jetty.eclipse.org/configure.dtd">
@@ -173,16 +174,15 @@ Sample configuration for ${JETTY_HOME}/context/${APP_NAME}.xml:
 You can configure the behavior of session manager with following setters.
 
 * setSessionIdManager(SessionIdManager idManager)
-** session id manager you created.
+  * session id manager you created.
 * setSessionFacade(AbstractSessionFacade sf)
-** set session serializer. org.eclipse.jetty.nosql.kvs.session.serializable.SerializableSessionFacade is used by default.
+  * set session serializer. org.eclipse.jetty.nosql.kvs.session.serializable.SerializableSessionFacade is used by default.
 
 
 ## License
 
-Copyright (c) 2011-2012 Geisha Tokyo Entertainment, Inc.
-
-Copyright (c) 2011-2012 Yamashita, Yuu <yamashita@geishatokyo.com>
+* Copyright (c) 2011-2012 Geisha Tokyo Entertainment, Inc.
+* Copyright (c) 2011-2012 Yamashita, Yuu <yamashita@geishatokyo.com>
 
 All rights reserved. This program and the accompanying materials
 are made available under the terms of the Eclipse Public License v1.0
