@@ -95,8 +95,6 @@ You can configure the behavior of session ID manager with following setters.
   * use keySuffix for session key suffix on memcached.
 * setServerString(String serverString)
   * specify server address and port in string. multiple hosts can be specified with spaces.
-* setSticky(boolean)
-  * set frontend load-balancer performs sticky sessions (session persistence) or not. true by default.
 * setTimeoutInMs(int timeoutInMS)
   * set timeout for memcached connections.
 
