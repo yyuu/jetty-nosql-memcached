@@ -2,6 +2,7 @@ package org.eclipse.jetty.nosql.memcached;
 
 // ========================================================================
 // Copyright (c) 1996-2009 Mort Bay Consulting Pty. Ltd.
+// Copyright (c) 2012 Geisha Tokyo Entarteinment, Inc.
 // ------------------------------------------------------------------------
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
@@ -104,7 +105,6 @@ public class MemcachedTestServer extends AbstractTestServer
             _idManager.setScavengePeriod((int)TimeUnit.SECONDS.toMillis(_scavengePeriod));
             _idManager.setKeyPrefix("MemcachedTestServer::");
             _idManager.setKeySuffix("::MemcachedTestServer");
-            _idManager.setSticky(isStickyTest());
             // to avoid stupid bugs of instance initialization...
             _idManager.setDefaultExpiry(_idManager.getDefaultExpiry());
             _idManager.setServerString(_idManager.getServerString());
@@ -116,16 +116,6 @@ public class MemcachedTestServer extends AbstractTestServer
         {
             throw new IllegalStateException();
         }
-    }
-
-    public boolean isStickyTest() {
-        String sticky = System.getProperty("org.eclipse.jetty.nosql.memcached.sticky", "true").trim().toLowerCase();
-        return "true".equals(sticky);
-    }
-
-    public boolean isFullTest() {
-        String fullTest = System.getProperty("org.eclipse.jetty.nosql.memcached.fullTest", "false").trim().toLowerCase();
-        return "true".equals(fullTest);
     }
 
     public SessionManager newSessionManager()

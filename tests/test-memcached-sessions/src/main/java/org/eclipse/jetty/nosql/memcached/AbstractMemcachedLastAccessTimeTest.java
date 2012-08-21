@@ -1,6 +1,7 @@
 package org.eclipse.jetty.nosql.memcached;
 //========================================================================
 //Copyright (c) 2011 Intalio, Inc.
+//Copyright (c) 2012 Geisha Tokyo Entertainment, Inc.
 //------------------------------------------------------------------------
 //All rights reserved. This program and the accompanying materials
 //are made available under the terms of the Eclipse Public License v1.0

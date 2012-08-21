@@ -1,6 +1,5 @@
 package org.eclipse.jetty.nosql.kvs;
 
-
 public interface IKeyValueStoreClient {
 	public boolean establish() throws KeyValueStoreClientException;
 

@@ -2,6 +2,7 @@ package org.eclipse.jetty.nosql.kvs;
 
 //========================================================================
 //Copyright (c) 2011 Intalio, Inc.
+//Copyright (c) 2012 Geisha Tokyo Entertainment, Inc.
 //------------------------------------------------------------------------
 //All rights reserved. This program and the accompanying materials
 //are made available under the terms of the Eclipse Public License v1.0
@@ -31,7 +32,6 @@ public class KeyValueStoreSessionManager extends NoSqlSessionManager {
 	protected String _cookieDomain = getSessionCookieConfig().getDomain();
 	protected String _cookiePath = getSessionCookieConfig().getPath();
 	protected AbstractSessionFacade sessionFacade = null;
-	protected boolean _sticky = true;
 
 	/* ------------------------------------------------------------ */
 	public KeyValueStoreSessionManager() {
@@ -103,7 +103,6 @@ public class KeyValueStoreSessionManager extends NoSqlSessionManager {
 		try {
 			KeyValueStoreSessionIdManager kvsIdManager = (KeyValueStoreSessionIdManager) idManager;
 			super.setSessionIdManager(kvsIdManager);
-			setSticky(kvsIdManager.isSticky());
 		} catch (ClassCastException error) {
 			log.warn("unable to cast " + idManager.getClass() + " to " + KeyValueStoreSessionIdManager.class + ".");
 			throw(error);
@@ -221,21 +220,14 @@ public class KeyValueStoreSessionManager extends NoSqlSessionManager {
 
 	@Override
 	protected void addSession(AbstractSession session) {
-		if (isSticky()) {
-			super.addSession(session);
-		}
+		// nop
 	}
 	
 	@Override
 	public AbstractSession getSession(String idInCluster)
 	{
 		AbstractSession session;
-		if (isSticky()) {
-			session = super.getSession(idInCluster);
-		} else {
-			session = loadSession(idInCluster);
-		}
-		return session;
+		return loadSession(idInCluster);
 	}
 
 	/*------------------------------------------------------------ */
@@ -306,25 +298,22 @@ public class KeyValueStoreSessionManager extends NoSqlSessionManager {
 	/*------------------------------------------------------------ */
 	@Override
 	protected boolean remove(NoSqlSession session) {
-		log.debug("remove:session " + session.getClusterId());
+		return true; // nop
+	}
 
-		/*
-		 * Check if the session exists and if it does remove the context
-		 * associated with this session
-		 */
-		return deleteKey(session.getClusterId());
+	@Override
+	protected boolean removeSession(String idInCluster) {
+		synchronized(this) {
+			return deleteKey(idInCluster);
+		}
 	}
 
 	/*------------------------------------------------------------ */
 	@Override
 	protected void invalidateSessions() throws Exception {
-		if (isSticky()) {
-			super.invalidateSessions();
-		} else {
-			// do nothing.
-			// we do not want to invalidate all sessions on doStop().
-			log.debug("invalidateSessions: nothing to do.");
-		}
+		// do nothing.
+		// we do not want to invalidate all sessions on doStop().
+		log.debug("invalidateSessions: nothing to do.");
 	}
 
 	/*------------------------------------------------------------ */
@@ -405,13 +394,5 @@ public class KeyValueStoreSessionManager extends NoSqlSessionManager {
 
 	public void setSessionFacade(AbstractSessionFacade sf) {
 		this.sessionFacade = sf;
-	}
-
-	public void setSticky(boolean sticky) {
-		this._sticky = sticky;
-	}
-
-	public boolean isSticky() {
-		return _sticky;
 	}
 }

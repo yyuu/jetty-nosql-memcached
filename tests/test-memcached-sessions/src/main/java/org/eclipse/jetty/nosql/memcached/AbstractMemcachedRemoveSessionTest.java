@@ -1,6 +1,7 @@
 package org.eclipse.jetty.nosql.memcached;
 //========================================================================
 //Copyright (c) 2011 Intalio, Inc.
+//Copyright (c) 2012 Geisha Tokyo Entertainment, Inc.
 //------------------------------------------------------------------------
 //All rights reserved. This program and the accompanying materials
 //are made available under the terms of the Eclipse Public License v1.0
@@ -20,27 +21,16 @@ import org.junit.Test;
 
 public abstract class AbstractMemcachedRemoveSessionTest extends AbstractRemoveSessionTest
 { 
-	protected boolean swallowExceptions = false;
 	private Logger log = Log.getLogger("org.eclipse.jetty.nosql.memcached.AbstractMemcachedRemoveSessionTest");
 
 	public AbstractTestServer createServer(int port, int max, int scavenge)
 	{
-		MemcachedTestServer server = new MemcachedTestServer(port,max,scavenge);
-		swallowExceptions = !server.isFullTest() && !server.isStickyTest();
-		return server;
+		return new MemcachedTestServer(port,max,scavenge);
 	}
 
 	@Test
 	public void testRemoveSession() throws Exception
 	{
-		try {
-			super.testRemoveSession();
-		} catch(AssertionError error) {
-			if (swallowExceptions) { // FIXME: non-sticky mode cannot pass this test
-				log.warn("FIXME: non-sticky mode cannot pass this test", error);
-			} else {
-				throw error;
-			}
-		}
+		super.testRemoveSession();
 	}
 }

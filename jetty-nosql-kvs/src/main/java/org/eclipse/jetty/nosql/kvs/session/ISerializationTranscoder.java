@@ -1,6 +1,5 @@
 package org.eclipse.jetty.nosql.kvs.session;
 
-
 public interface ISerializationTranscoder {
 //	public byte[] encode(boolean b) throws TranscoderException;
 //

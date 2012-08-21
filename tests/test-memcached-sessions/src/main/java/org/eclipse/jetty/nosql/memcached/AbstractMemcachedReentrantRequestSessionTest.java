@@ -2,6 +2,7 @@ package org.eclipse.jetty.nosql.memcached;
 
 // ========================================================================
 // Copyright (c) 1996-2009 Mort Bay Consulting Pty. Ltd.
+// Copyright (c) 2012 Geisha Tokyo Entertainment, Inc.
 // ------------------------------------------------------------------------
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
@@ -24,27 +25,16 @@ import org.junit.Test;
  */
 public abstract class AbstractMemcachedReentrantRequestSessionTest extends AbstractReentrantRequestSessionTest
 {
-	protected boolean swallowExceptions = false;
 	private Logger log = Log.getLogger("org.eclipse.jetty.nosql.memcached.AbstractMemcachedReentrantRequestSessionTest");
 
 	public AbstractTestServer createServer(int port)
 	{
-		MemcachedTestServer server = new MemcachedTestServer(port);
-		swallowExceptions = !server.isFullTest() && !server.isStickyTest();
-		return server;
+		return new MemcachedTestServer(port);
 	}
 
 	@Test
 	public void testReentrantRequestSession() throws Exception
 	{
-		try {
-			super.testReentrantRequestSession();
-		} catch(AssertionError error) {
-			if (swallowExceptions) {
-				log.warn("FIXME: non-sticky mode cannot pass this test", error);
-			} else {
-				throw error;
-			}
-		}
+		super.testReentrantRequestSession();
 	}
 }
