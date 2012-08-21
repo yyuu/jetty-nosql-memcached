@@ -11,11 +11,12 @@ SessionManager implementation for Jetty based on jetty-nosql.
 
 All dependencies can be resolved from Maven.
 
-* jetty (8.0.0 or later)
-* spymemcached
-* xmemcached
-* kryo
-* xstream
+* [maven](http://maven.apache.org/) (2.2.x or later)
+* [jetty](http://eclipse.org/jetty/) (8.0.0 or later)
+* [spymemcached](http://code.google.com/p/spymemcached/)
+* [xmemcached](http://code.google.com/p/xmemcached/)
+* [kryo](http://code.google.com/p/kryo/)
+* [xstream](http://xstream.codehaus.org/)
 
 
 ## Build
