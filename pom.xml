@@ -28,7 +28,7 @@
 	</licenses>
 	<scm>
 		<connection>scm:git:git://github.com/yyuu/jetty-nosql-memcached.git</connection>
-		<developerConnection>scm:git:git@github.com/yyuu/jetty-nosql-memcached.git</developerConnection>
+		<developerConnection>scm:git:git@github.com:yyuu/jetty-nosql-memcached.git</developerConnection>
 		<url>scm:git:git://github.com/yyuu/jetty-nosql-memcached.git</url>
 	</scm>
 	<issueManagement>
