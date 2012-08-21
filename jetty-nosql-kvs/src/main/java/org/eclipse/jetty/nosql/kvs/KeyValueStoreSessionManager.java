@@ -395,4 +395,18 @@ public class KeyValueStoreSessionManager extends NoSqlSessionManager {
 	public void setSessionFacade(AbstractSessionFacade sf) {
 		this.sessionFacade = sf;
 	}
+
+	/**
+	 * @deprecated
+	 */
+	public void setSticky(boolean sticky) { // TODO: remove
+		log.warn("deprecated setter `setSticky' was called. this will be removed in future release.");
+	}
+
+	/**
+	 * @deprecated
+	 */
+	public boolean isSticky() { // TODO: remove
+		return false;
+	}
 }

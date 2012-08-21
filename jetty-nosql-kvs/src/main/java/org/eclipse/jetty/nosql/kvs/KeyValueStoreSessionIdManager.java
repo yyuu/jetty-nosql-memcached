@@ -266,4 +266,18 @@ public abstract class KeyValueStoreSessionIdManager extends AbstractSessionIdMan
 	public void setTimeoutInMs(int timeoutInMs) {
 		this._timeoutInMs = timeoutInMs;
 	}
+
+	/**
+	 * @deprecated
+	 */
+	public void setSticky(boolean sticky) { // TODO: remove
+		log.warn("deprecated setter `setSticky' was called. this will be removed in future release.");
+	}
+
+	/**
+	 * @deprecated
+	 */
+	public boolean isSticky() { // TODO: remove
+		return false;
+	}
 }
