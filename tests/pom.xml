@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>com.geishatokyo.jetty</groupId>
 		<artifactId>jetty-nosql-memcached-parent</artifactId>
-		<version>0.3.0</version>
+		<version>0.3.1-SNAPSHOT</version>
 	</parent>
 	<groupId>com.geishatokyo.jetty.tests</groupId>
 	<artifactId>jetty-nosql-memcached-tests</artifactId>
