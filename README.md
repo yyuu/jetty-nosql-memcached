@@ -186,7 +186,7 @@ You can configure the behavior of session manager with following setters.
 ## License
 
 * Copyright (c) 2011-2012 Geisha Tokyo Entertainment, Inc.
-* Copyright (c) 2011-2012 Yamashita, Yuu <yamashita@geishatokyo.com>
+* Copyright (c) 2011-2012 Yamashita, Yuu
 
 All rights reserved. This program and the accompanying materials
 are made available under the terms of the Eclipse Public License v1.0
