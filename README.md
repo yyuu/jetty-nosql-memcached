@@ -8,27 +8,6 @@
 SessionManager implementation for Jetty based on jetty-nosql.
 
 
-## Requirements
-
-All dependencies can be resolved from Maven.
-
-* [maven](http://maven.apache.org/) (2.2.x or later)
-* [jetty](http://eclipse.org/jetty/) (8.0.0 or later)
-* [spymemcached](http://code.google.com/p/spymemcached/)
-* [xmemcached](http://code.google.com/p/xmemcached/)
-* [kryo](http://code.google.com/p/kryo/)
-* [xstream](http://xstream.codehaus.org/)
-
-
-## Build
-
-You can build all relating projects from Maven.
-
-    $ git clone git://github.com/yyuu/jetty-nosql-memcached.git
-    $ cd jetty-nosql-memcached
-    $ mvn clean package
-
-
 ## Install
 
 jetty-nosql-memcached is an extension for Jetty-8.
@@ -181,6 +160,36 @@ You can configure the behavior of session manager with following setters.
   * session id manager you created.
 * setSessionFacade(AbstractSessionFacade sf)
   * set session serializer. org.eclipse.jetty.nosql.kvs.session.serializable.SerializableSessionFacade is used by default.
+
+
+## Development
+
+### Requirements
+
+All library dependencies can be resolved from Maven.
+
+* [maven](http://maven.apache.org/) (2.2.x or later)
+* [jetty](http://eclipse.org/jetty/) (8.0.0 or later)
+* [spymemcached](http://code.google.com/p/spymemcached/)
+* [xmemcached](http://code.google.com/p/xmemcached/)
+* [kryo](http://code.google.com/p/kryo/)
+* [xstream](http://xstream.codehaus.org/)
+
+### Build
+
+You can build project tree from top of the repository.
+
+    $ git clone git://github.com/yyuu/jetty-nosql-memcached.git
+    $ cd jetty-nosql-memcached
+    $ mvn clean package
+
+### Release
+
+Use maven-release-plguin.
+
+    $ mvn release:clean
+    $ mvn release:prepare -Darguments="-Dgpg.passphrase=${GPG_PASSPHRASE}"
+    $ mvn release:perform
 
 
 ## License
