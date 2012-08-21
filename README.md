@@ -154,6 +154,9 @@ Sample configuration for `${JETTY_HOME}/context/${APP_NAME}.xml`:
               <Set name="sessionIdManager">
                 <Ref id="memcachedSessionIdManager" />
               </Set>
+              <Set name="sessionFacade">
+                <Ref id="org.eclipse.jetty.nosql.kvs.session.xstream.XStreamSessionFacade" />
+              </Set>
             </New>
           </Arg>
         </New>
@@ -165,6 +168,7 @@ Sample configuration for `${JETTY_HOME}/context/${APP_NAME}.xml`:
       MemcachedSessionIdManager sessionIdManager = server.getAttribute("memcachedSessionIdManager");
       MemcachedSessionManager sessionManager = new MemcachedSessionManager();
       sessionManager.setSessionIdManager(sessionIdManager);
+      sessionManager.setSessionFacade(new XStreamSessionFacade());
       context.setSessionHandler(new SessionHandler(sessionManager));
       -->
 
