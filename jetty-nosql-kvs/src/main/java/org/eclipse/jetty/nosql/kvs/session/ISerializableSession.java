@@ -11,7 +11,7 @@ public interface ISerializableSession {
 	public String getId();
 	/**
 	 * 
-	 * @param string form of id
+	 * @param id string form of id
 	 */
 	public void setId(String id);
 
@@ -23,7 +23,7 @@ public interface ISerializableSession {
 
 	/**
 	 * 
-	 * @param creation time
+	 * @param created creation time
 	 */
 	public void setCreationTime(long created);
 
@@ -35,7 +35,7 @@ public interface ISerializableSession {
 
 	/**
 	 * 
-	 * @param last accessed time
+	 * @param accessed last accessed time
 	 */
 	public void setAccessed(long accessed);
 
@@ -60,8 +60,8 @@ public interface ISerializableSession {
 
 	/**
 	 * 
-	 * @param key of attribute
-	 * @param attribute value
+	 * @param key key of attribute
+	 * @param obj attribute value
 	 */
 	public void setAttribute(String key, Object obj);
 
@@ -85,7 +85,7 @@ public interface ISerializableSession {
 
 	/**
 	 * 
-	 * @param set true for valid sessions
+	 * @param valid set true for valid sessions
 	 */
 	public void setValid(boolean valid);
 

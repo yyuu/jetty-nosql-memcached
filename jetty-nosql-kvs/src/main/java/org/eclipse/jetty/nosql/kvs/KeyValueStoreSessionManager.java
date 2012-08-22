@@ -113,12 +113,7 @@ public class KeyValueStoreSessionManager extends NoSqlSessionManager {
 
 			ISerializableSession data;
 			synchronized (session) {
-				if (session.isValid()) {
-					data = getSessionFacade().create(session);
-				} else {
-					data = getSessionFacade().create(session.getId(), session.getCreationTime());
-					data.setValid(false);
-				}
+				data = getSessionFacade().create(session);
 			}
 			data.setDomain(_cookieDomain);
 			data.setPath(_cookiePath);

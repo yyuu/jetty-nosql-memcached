@@ -1,10 +1,15 @@
 package org.eclipse.jetty.nosql.kvs.session;
 
+import java.lang.reflect.Field;
 import java.util.Enumeration;
+import java.util.Map;
 
 import org.eclipse.jetty.server.session.AbstractSession;
+import org.eclipse.jetty.util.log.Log;
+import org.eclipse.jetty.util.log.Logger;
 
 public abstract class AbstractSessionFactory {
+	protected final static Logger log = Log.getLogger("org.eclipse.jetty.nosql.kvs.session.AbstractSessionFactory");
 	public abstract ISerializableSession create();
 
 	public ISerializableSession create(String sessionId) {
@@ -19,14 +24,25 @@ public abstract class AbstractSessionFactory {
 		return s;
 	}
 
-	public ISerializableSession create(AbstractSession session) {
-		ISerializableSession s = create(session.getId(), session.getCreationTime());
-		s.setAccessed(session.getAccessed());
-		for (Enumeration<String> e=session.getAttributeNames(); e.hasMoreElements();) {
-			String key = e.nextElement();
-			s.setAttribute(key, session.getAttribute(key));
-		}
-		s.setValid(session.isValid());
+	public ISerializableSession create(String sessionId, long created, long accessed) {
+		ISerializableSession s = create(sessionId, created);
+		s.setAccessed(accessed);
 		return s;
+	}
+
+	public ISerializableSession create(AbstractSession session) {
+		synchronized(session) {
+			ISerializableSession s = create(session.getId(), session.getCreationTime(), session.getAccessed());
+			if (session.isValid()) {
+				for (String key: session.getNames()) {
+					s.setAttribute(key, session.getAttribute(key));
+				}
+			} else {
+				// we do not need to retrieve attributes of invalidated sessions since
+				// they have been cleared on AbstractSession.invalidate().
+				s.setValid(false);
+			}
+			return s;
+		}
 	}
 }
