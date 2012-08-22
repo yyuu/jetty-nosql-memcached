@@ -8,7 +8,6 @@
 	<artifactId>jetty-nosql-kvs</artifactId>
 	<name>jetty-nosql-kvs</name>
 	<description>An abstract session manager impl for jetty to store sessions on key-value-store.</description>
-	<url>https://github.com/yyuu/jetty-nosql-kvs</url>
 	<profiles>
 		<profile>
 			<id>release-sign-artifacts</id>
@@ -53,6 +52,16 @@
 			<artifactId>jetty-server</artifactId>
 			<scope>provided</scope>
 		</dependency>
+		<dependency>
+			<groupId>com.googlecode</groupId>
+			<artifactId>kryo</artifactId>
+			<version>1.04</version>
+		</dependency>
+		<dependency>
+			<groupId>com.thoughtworks.xstream</groupId>
+			<artifactId>xstream</artifactId>
+			<version>1.4.1</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
@@ -87,7 +96,7 @@
 					<execution>
 						<id>attach-javadocs</id>
 						<goals>
-							<goal>aggregate</goal>
+							<goal>jar</goal>
 						</goals>
 					</execution>
 				</executions>

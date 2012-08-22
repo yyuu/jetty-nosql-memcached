@@ -44,8 +44,6 @@
 	<modules>
 		<module>jetty-nosql-kvs</module>
 		<module>jetty-nosql-memcached</module>
-		<module>jetty-nosql-memcached-kryo</module>
-		<module>jetty-nosql-memcached-xstream</module>
 		<module>tests</module>
 	</modules>
 	<licenses>

@@ -8,7 +8,6 @@
 	<artifactId>test-memcached-sessions</artifactId>
 	<name>test-memcached-sessions</name>
 	<description>Test cases for jetty-nosql-memcached and relating projects.</description>
-	<url>https://github.com/yyuu/test-memcached-sessions</url>
 	<profiles>
 		<profile>
 			<id>release-sign-artifacts</id>
@@ -90,7 +89,7 @@
 					<execution>
 						<id>attach-javadocs</id>
 						<goals>
-							<goal>aggregate</goal>
+							<goal>jar</goal>
 						</goals>
 					</execution>
 				</executions>

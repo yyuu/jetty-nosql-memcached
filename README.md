@@ -17,8 +17,6 @@ Built jars of jetty-nosql-memcached can be found on Maven Central.
 You can install one of them without building.
 
 - http://search.maven.org/#search%7Cga%7C1%7Ca%3A%22jetty-nosql-memcached%22
-- http://search.maven.org/#search%7Cga%7C1%7Ca%3A%22jetty-nosql-memcached-kryo%22
-- http://search.maven.org/#search%7Cga%7C1%7Ca%3A%22jetty-nosql-memcached-xstream%22
 
 *NOTE*
 
