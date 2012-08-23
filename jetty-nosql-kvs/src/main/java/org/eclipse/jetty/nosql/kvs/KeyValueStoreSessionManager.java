@@ -111,6 +111,12 @@ public class KeyValueStoreSessionManager extends NoSqlSessionManager {
 			log.debug("save:" + session);
 			session.willPassivate();
 
+			if (!session.isValid()) {
+				log.debug("save: skip saving invalidated session: id=" + session.getId());
+				deleteKey(session.getId());
+				return null;
+			}
+
 			ISerializableSession data;
 			synchronized (session) {
 				data = getSessionFacade().create(session);
@@ -288,14 +294,16 @@ public class KeyValueStoreSessionManager extends NoSqlSessionManager {
 	/*------------------------------------------------------------ */
 	@Override
 	protected boolean remove(NoSqlSession session) {
-		return true; // nop
+		if (session == null) {
+			return false;
+		} else {
+			return deleteKey(session.getId());
+		}
 	}
 
 	@Override
 	protected boolean removeSession(String idInCluster) {
-		synchronized(this) {
-			return deleteKey(idInCluster);
-		}
+		return deleteKey(idInCluster);
 	}
 
 	/*------------------------------------------------------------ */
@@ -309,23 +317,9 @@ public class KeyValueStoreSessionManager extends NoSqlSessionManager {
 	/*------------------------------------------------------------ */
 	@Override
 	protected void invalidateSession(String idInCluster) {
-		log.debug("invalidateSession:invalidating " + idInCluster);
-
-		super.invalidateSession(idInCluster);
-
-		/*
-		 * pull back the 'valid' value, we can check if its false, if is we
-		 * don't need to reset it to false
-		 */
-		ISerializableSession data = getKey(idInCluster);
-
-		if (data != null && data.isValid()) {
-			data.setValid(false);
-			boolean success = setKey(idInCluster, data);
-			if (!success) {
-				throw(new RuntimeException("unable to set key: data=" + data));
-			}
-		}
+		// do nothing.
+		// invalidated sessions will not save in KeyValueStoreSessionManager.save()
+		log.debug("invalidateSession: invalidating " + idInCluster);
 	}
 
 	protected String mangleKey(String idInCluster) {
