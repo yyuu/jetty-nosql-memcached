@@ -56,8 +56,6 @@ public abstract class KeyValueStoreSessionIdManager extends AbstractSessionIdMan
 
 	protected long _defaultExpiry = TimeUnit.MINUTES.toMillis(30); // 30 minutes
 
-	protected final Set<String> _sessions = Collections.synchronizedSet(new LinkedHashSet<String>());
-
 	protected String _keyPrefix = "";
 	protected String _keySuffix = "";
 	protected IKeyValueStoreClient _client = null;
@@ -110,7 +108,10 @@ public abstract class KeyValueStoreSessionIdManager extends AbstractSessionIdMan
 	 */
 	public boolean idInUse(String idInCluster) {
 		byte[] dummy = idInCluster.getBytes(); // dummy string for reserving key
-		return ! addKey(idInCluster, dummy);
+		boolean exists = ! addKey(idInCluster, dummy);
+		// do not check the validity of the session since
+		// we do not save invalidated sessions anymore.
+		return exists;
 	}
 
 	/* ------------------------------------------------------------ */
@@ -124,9 +125,7 @@ public abstract class KeyValueStoreSessionIdManager extends AbstractSessionIdMan
 
 	/* ------------------------------------------------------------ */
 	public void removeSession(HttpSession session) {
-		if (session == null) {
-			return;
-		}
+		// nop
 	}
 
 	/* ------------------------------------------------------------ */
