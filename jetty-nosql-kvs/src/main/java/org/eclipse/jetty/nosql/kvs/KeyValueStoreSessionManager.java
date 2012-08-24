@@ -123,9 +123,12 @@ public class KeyValueStoreSessionManager extends NoSqlSessionManager {
 			}
 			data.setVersion(longVersion);
 
-			boolean success = setKey(session.getId(), data);
-			if (!success) {
-				throw(new RuntimeException("unable to set key: data=" + data));
+			try {
+				if(!setKey(session.getId(), data)) {
+					throw(new RuntimeException("unable to set key: data=" + data));
+				}
+			} catch(TranscoderException error) {
+				throw(new IllegalArgumentException("unable to serialize session: id=" + session.getId() + ", data=" + data, error));
 			}
 			log.debug("save:db.sessions.update(" + session.getId() + "," + data + ")");
 
@@ -144,8 +147,12 @@ public class KeyValueStoreSessionManager extends NoSqlSessionManager {
 	@Override
 	protected Object refresh(NoSqlSession session, Object version) {
 		log.debug("refresh " + session);
-		ISerializableSession data = getKey(session.getClusterId());
-
+		ISerializableSession data = null;
+		try {
+			data = getKey(session.getClusterId());
+		} catch(TranscoderException error) {
+			throw(new IllegalStateException("unable to deserialize session: id=" + session.getClusterId(), error));
+		}
 		// check if our in memory version is the same as what is on KVS
 		if (version != null) {
 			long saved = 0;
@@ -332,46 +339,31 @@ public class KeyValueStoreSessionManager extends NoSqlSessionManager {
 		return idInCluster;
 	}
 
-	protected ISerializableSession getKey(String idInCluster) {
+	protected ISerializableSession getKey(String idInCluster) throws TranscoderException {
 		byte[] raw = ((KeyValueStoreSessionIdManager)_sessionIdManager).getKey(mangleKey(idInCluster));
 		if (raw == null) {
 			return null;
+		} else {
+			return getSessionFacade().unpack(raw);
 		}
-		ISerializableSession data = null;
-		try {
-			data = getSessionFacade().unpack(raw);
-		} catch (TranscoderException error) {
-			log.warn("unable to deserialize data: id=" + idInCluster, error);
-		} catch (Exception error) {
-			log.warn("unknown exception during deserilization: id=" + idInCluster, error);
-		}
-		return data;
 	}
 
-	protected boolean setKey(String idInCluster, ISerializableSession data) {
-		int expiry = getMaxInactiveInterval();
-		byte[] raw = null;
-		try {
-			raw = getSessionFacade().pack(data);
-		} catch (TranscoderException error) {
-			log.warn("unable to serialize data: id=" + idInCluster + ", data=" + data, error);
-		} catch (Exception error) {
-			log.warn("unknown exception during serialization: id=" + idInCluster + ", data=" + data, error);
+	protected boolean setKey(String idInCluster, ISerializableSession data) throws TranscoderException {
+		byte[] raw = getSessionFacade().pack(data);
+		if (raw == null) {
+			return false;
+		} else {
+			return ((KeyValueStoreSessionIdManager) _sessionIdManager).setKey(mangleKey(idInCluster), raw, getMaxInactiveInterval());
 		}
-		return raw != null && ((KeyValueStoreSessionIdManager) _sessionIdManager).setKey(mangleKey(idInCluster), raw, expiry);
 	}
 
-	protected boolean addKey(String idInCluster, ISerializableSession data) {
-		int expiry = getMaxInactiveInterval();
-		byte[] raw = null;
-		try {
-			raw = getSessionFacade().pack(data);
-		} catch (TranscoderException error) {
-			log.warn("unable to serialize data: id=" + idInCluster + ", data=" + data, error);
-		} catch (Exception error) {
-			log.warn("unknown exception during serialization: id=" + idInCluster + ", data=" + data, error);
+	protected boolean addKey(String idInCluster, ISerializableSession data) throws TranscoderException {
+		byte[] raw = getSessionFacade().pack(data);
+		if (raw == null) {
+			return false;
+		} else {
+			return ((KeyValueStoreSessionIdManager) _sessionIdManager).addKey(mangleKey(idInCluster), raw, getMaxInactiveInterval());
 		}
-		return raw != null && ((KeyValueStoreSessionIdManager) _sessionIdManager).addKey(mangleKey(idInCluster), raw, expiry);
 	}
 
 	protected boolean deleteKey(String idInCluster) {
