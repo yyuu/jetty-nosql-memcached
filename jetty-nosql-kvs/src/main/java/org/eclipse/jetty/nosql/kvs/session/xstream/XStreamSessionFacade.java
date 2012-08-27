@@ -1,8 +1,9 @@
 package org.eclipse.jetty.nosql.kvs.session.xstream;
 
 /**
- * @deprecated
+ * @deprecated from 0.3.1. use #{@link XStreamSessionFactory} instead.
  */
+@Deprecated
 public class XStreamSessionFacade extends XStreamSessionFactory {
 	public XStreamSessionFacade() {
 		this(Thread.currentThread().getContextClassLoader());

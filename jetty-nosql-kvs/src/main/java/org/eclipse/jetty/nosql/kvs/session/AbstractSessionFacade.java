@@ -3,8 +3,9 @@ package org.eclipse.jetty.nosql.kvs.session;
 import org.eclipse.jetty.server.session.AbstractSession;
 
 /**
- * @deprecated
+ * @deprecated from 0.3.1. use #{@link AbstractSessionFactory} instead.
  */
+@Deprecated
 public abstract class AbstractSessionFacade {
 	protected AbstractSessionFactory sessionFactory;
 	protected ISerializationTranscoder transcoder;

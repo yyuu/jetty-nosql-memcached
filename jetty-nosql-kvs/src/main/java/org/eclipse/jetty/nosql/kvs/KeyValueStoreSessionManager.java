@@ -365,15 +365,17 @@ public class KeyValueStoreSessionManager extends NoSqlSessionManager {
 	}
 
 	/**
-	 * @deprecated
+	 * @deprecated from 0.3.1. use #{@link org.eclipse.jetty.nosql.kvs.KeyValueStoreSessionManager#getSessionFactory()} instead.
 	 */
+	@Deprecated
 	public AbstractSessionFactory getSessionFacade() {
 		return sessionFactory;
 	}
 
 	/**
-	 * @deprecated
+	 * @deprecated from 0.3.1. use #{@link KeyValueStoreSessionManager#setSessionFactory(org.eclipse.jetty.nosql.kvs.session.AbstractSessionFactory)} instead.
 	 */
+	@Deprecated
 	public void setSessionFacade(AbstractSessionFactory sf) {
 		log.warn("deprecated setter `setSessionFacade' was called. this will be removed in future release.");
 		this.sessionFactory = sf;
@@ -388,15 +390,17 @@ public class KeyValueStoreSessionManager extends NoSqlSessionManager {
 	}
 
 	/**
-	 * @deprecated
+	 * @deprecated from 0.3.0. this is false by default and is not an option.
 	 */
+	@Deprecated
 	public void setSticky(boolean sticky) { // TODO: remove
 		log.warn("deprecated setter `setSticky' was called. this will be removed in future release.");
 	}
 
 	/**
-	 * @deprecated
+	 * @deprecated from 0.3.0. this is false by default and is not an option.
 	 */
+	@Deprecated
 	public boolean isSticky() { // TODO: remove
 		return false;
 	}

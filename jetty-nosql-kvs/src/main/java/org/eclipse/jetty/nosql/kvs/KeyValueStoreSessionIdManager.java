@@ -267,15 +267,17 @@ public abstract class KeyValueStoreSessionIdManager extends AbstractSessionIdMan
 	}
 
 	/**
-	 * @deprecated
+	 * @deprecated from 0.3.0. this is false by default and is not an option.
 	 */
+	@Deprecated
 	public void setSticky(boolean sticky) { // TODO: remove
 		log.warn("deprecated setter `setSticky' was called. this will be removed in future release.");
 	}
 
 	/**
-	 * @deprecated
+	 * @deprecated from 0.3.0. this is false by default and is not an option.
 	 */
+	@Deprecated
 	public boolean isSticky() { // TODO: remove
 		return false;
 	}
