@@ -18,10 +18,10 @@ import java.util.Enumeration;
 
 import org.eclipse.jetty.nosql.NoSqlSession;
 import org.eclipse.jetty.nosql.NoSqlSessionManager;
-import org.eclipse.jetty.nosql.kvs.session.AbstractSessionFacade;
+import org.eclipse.jetty.nosql.kvs.session.AbstractSessionFactory;
 import org.eclipse.jetty.nosql.kvs.session.ISerializableSession;
 import org.eclipse.jetty.nosql.kvs.session.TranscoderException;
-import org.eclipse.jetty.nosql.kvs.session.serializable.SerializableSessionFacade;
+import org.eclipse.jetty.nosql.kvs.session.serializable.SerializableSessionFactory;
 import org.eclipse.jetty.server.SessionIdManager;
 import org.eclipse.jetty.server.session.AbstractSession;
 import org.eclipse.jetty.util.log.Log;
@@ -31,7 +31,7 @@ public class KeyValueStoreSessionManager extends NoSqlSessionManager {
 	private final static Logger log = Log.getLogger("org.eclipse.jetty.nosql.kvs.KeyValueStoreSessionManager");
 	protected String _cookieDomain = getSessionCookieConfig().getDomain();
 	protected String _cookiePath = getSessionCookieConfig().getPath();
-	protected AbstractSessionFacade sessionFacade = null;
+	protected AbstractSessionFactory sessionFactory = null;
 
 	/* ------------------------------------------------------------ */
 	public KeyValueStoreSessionManager() {
@@ -60,13 +60,13 @@ public class KeyValueStoreSessionManager extends NoSqlSessionManager {
 			}
 			this._cookiePath = cookiePath;
 		}
-		if (sessionFacade == null) {
-			sessionFacade = new SerializableSessionFacade();
+		if (sessionFactory == null) {
+			sessionFactory = new SerializableSessionFactory();
 		}
 		try {
 			// use context class loader during object deserialization.
 			// thanks Daniel Peters!
-			sessionFacade.setClassLoader(getContext().getClassLoader());
+			sessionFactory.setClassLoader(getContext().getClassLoader());
 			log.info("use context class loader for session deserializer.");
 			// FIXME: is there any safe way to refer context's class loader?
 			// getContext().getClassLoader() may raise SecurityException.
@@ -119,7 +119,7 @@ public class KeyValueStoreSessionManager extends NoSqlSessionManager {
 
 			ISerializableSession data;
 			synchronized (session) {
-				data = getSessionFacade().create(session);
+				data = getSessionFactory().create(session);
 			}
 			data.setDomain(_cookieDomain);
 			data.setPath(_cookiePath);
@@ -338,12 +338,12 @@ public class KeyValueStoreSessionManager extends NoSqlSessionManager {
 		if (raw == null) {
 			return null;
 		} else {
-			return getSessionFacade().unpack(raw);
+			return getSessionFactory().unpack(raw);
 		}
 	}
 
 	protected boolean setKey(String idInCluster, ISerializableSession data) throws TranscoderException {
-		byte[] raw = getSessionFacade().pack(data);
+		byte[] raw = getSessionFactory().pack(data);
 		if (raw == null) {
 			return false;
 		} else {
@@ -352,7 +352,7 @@ public class KeyValueStoreSessionManager extends NoSqlSessionManager {
 	}
 
 	protected boolean addKey(String idInCluster, ISerializableSession data) throws TranscoderException {
-		byte[] raw = getSessionFacade().pack(data);
+		byte[] raw = getSessionFactory().pack(data);
 		if (raw == null) {
 			return false;
 		} else {
@@ -364,12 +364,27 @@ public class KeyValueStoreSessionManager extends NoSqlSessionManager {
 		return ((KeyValueStoreSessionIdManager)_sessionIdManager).deleteKey(mangleKey(idInCluster));
 	}
 
-	public AbstractSessionFacade getSessionFacade() {
-		return sessionFacade;
+	/**
+	 * @deprecated
+	 */
+	public AbstractSessionFactory getSessionFacade() {
+		return sessionFactory;
 	}
 
-	public void setSessionFacade(AbstractSessionFacade sf) {
-		this.sessionFacade = sf;
+	/**
+	 * @deprecated
+	 */
+	public void setSessionFacade(AbstractSessionFactory sf) {
+		log.warn("deprecated setter `setSessionFacade' was called. this will be removed in future release.");
+		this.sessionFactory = sf;
+	}
+
+	public AbstractSessionFactory getSessionFactory() {
+		return sessionFactory;
+	}
+
+	public void setSessionFactory(AbstractSessionFactory sf) {
+		this.sessionFactory = sf;
 	}
 
 	/**

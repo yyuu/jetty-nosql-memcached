@@ -11,6 +11,11 @@ import org.eclipse.jetty.util.log.Logger;
 public abstract class AbstractSessionFactory {
 	protected final static Logger log = Log.getLogger("org.eclipse.jetty.nosql.kvs.session.AbstractSessionFactory");
 	public abstract ISerializableSession create();
+	protected ISerializationTranscoder transcoder;
+
+	public AbstractSessionFactory(ISerializationTranscoder t) {
+		transcoder = t;
+	}
 
 	public ISerializableSession create(String sessionId) {
 		ISerializableSession s = create();
@@ -45,4 +50,22 @@ public abstract class AbstractSessionFactory {
 			return s;
 		}
 	}
+
+	public ISerializationTranscoder getTranscoder() {
+		return transcoder;
+	}
+
+		public byte[] pack(ISerializableSession session) {
+		return pack(session, getTranscoder());
+	}
+
+	public abstract byte[] pack(ISerializableSession session, ISerializationTranscoder tc) throws TranscoderException;
+
+	public ISerializableSession unpack(byte[] raw) {
+		return unpack(raw, getTranscoder());
+	}
+
+	public abstract ISerializableSession unpack(byte[] raw, ISerializationTranscoder tc) throws TranscoderException;
+
+	public abstract void setClassLoader(ClassLoader cl);
 }

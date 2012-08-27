@@ -2,6 +2,9 @@ package org.eclipse.jetty.nosql.kvs.session;
 
 import org.eclipse.jetty.server.session.AbstractSession;
 
+/**
+ * @deprecated
+ */
 public abstract class AbstractSessionFacade {
 	protected AbstractSessionFactory sessionFactory;
 	protected ISerializationTranscoder transcoder;

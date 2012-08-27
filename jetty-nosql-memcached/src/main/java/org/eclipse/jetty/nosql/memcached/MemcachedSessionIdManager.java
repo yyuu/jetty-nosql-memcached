@@ -23,7 +23,7 @@ public class MemcachedSessionIdManager extends KeyValueStoreSessionIdManager {
 
 	public MemcachedSessionIdManager(Server server, String serverString, AbstractMemcachedClientFactory cf) throws IOException {
 		super(server, serverString);
-		_clientFactory = cf != null ? cf : new SpyMemcachedClientFactory();
+		_clientFactory = cf;
 	}
 
 	@Override
@@ -42,8 +42,23 @@ public class MemcachedSessionIdManager extends KeyValueStoreSessionIdManager {
 
 	@Override
 	protected AbstractKeyValueStoreClient newClient(String serverString) {
+		synchronized(this) {
+			if (_clientFactory == null) {
+				_clientFactory = new SpyMemcachedClientFactory(); // default client
+			}
+		}
 		AbstractKeyValueStoreClient client = _clientFactory.create(serverString);
 		client.setTimeoutInMs(getTimeoutInMs());
 		return client;
+	}
+
+	public AbstractMemcachedClientFactory getClientFactory() {
+		return _clientFactory;
+	}
+
+	public void setClientFactory(AbstractMemcachedClientFactory cf) {
+		synchronized(this) {
+			_clientFactory = cf;
+		}
 	}
 }

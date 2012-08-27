@@ -64,6 +64,8 @@ SessionIdManagers can be configured in files under `${JETTY_HOME}/etc`.  In foll
 
 You can configure the behavior of session ID manager with following setters.
 
+* setClientFactory(AbstractMemcachedClientFactory cf)
+  * set memcached client. org.eclipse.jetty.nosql.memcached.spymemcached.SpyMemcachedClientFactory is used by default.
 * setDefaultExpiry(int defaultExpiry)
   * set default expiry of sessions on memcached.
 * setKeyPrefix(String keyPrefix)
@@ -131,8 +133,8 @@ Sample configuration for `${JETTY_HOME}/context/${APP_NAME}.xml`:
               <Set name="sessionIdManager">
                 <Ref id="memcachedSessionIdManager" />
               </Set>
-              <Set name="sessionFacade">
-                <Ref id="org.eclipse.jetty.nosql.kvs.session.xstream.XStreamSessionFacade" />
+              <Set name="sessionFactory">
+                <Ref id="org.eclipse.jetty.nosql.kvs.session.xstream.XStreamSessionFactory" />
               </Set>
             </New>
           </Arg>
@@ -145,7 +147,7 @@ Sample configuration for `${JETTY_HOME}/context/${APP_NAME}.xml`:
       MemcachedSessionIdManager sessionIdManager = server.getAttribute("memcachedSessionIdManager");
       MemcachedSessionManager sessionManager = new MemcachedSessionManager();
       sessionManager.setSessionIdManager(sessionIdManager);
-      sessionManager.setSessionFacade(new XStreamSessionFacade());
+      sessionManager.setSessionFactory(new XStreamSessionFactory());
       context.setSessionHandler(new SessionHandler(sessionManager));
       -->
 
@@ -156,8 +158,8 @@ You can configure the behavior of session manager with following setters.
 
 * setSessionIdManager(SessionIdManager idManager)
   * session id manager you created.
-* setSessionFacade(AbstractSessionFacade sf)
-  * set session serializer. org.eclipse.jetty.nosql.kvs.session.serializable.SerializableSessionFacade is used by default.
+* setSessionFactory(AbstractSessionFactory sf)
+  * set session serializer. org.eclipse.jetty.nosql.kvs.session.serializable.SerializableSessionFactory is used by default.
 
 
 ## Development
