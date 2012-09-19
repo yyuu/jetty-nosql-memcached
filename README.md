@@ -188,8 +188,7 @@ You can build project tree from top of the repository.
 Use maven-release-plguin.
 
     $ mvn release:clean
-    $ mvn release:prepare -Darguments="-Dgpg.passphrase=${GPG_PASSPHRASE}"
-    $ mvn release:perform
+    $ mvn -Darguments="-Dgpg.passphrase=${GPG_PASSPHRASE}" release:prepare release:perform
 
 
 ## License
