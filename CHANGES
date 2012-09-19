@@ -1,3 +1,9 @@
+2012-09-22 Yamashita Yuu <yamashita@geishatokyo.com>
+	* Release: 0.3.1
+	* Delete invalidaetd sessions from memcached as soon as it is invalidated.
+	  Thanks Hridayesh Gupta.
+	* Changed project structure. Merged serializer packages into jetty-nosql-kvs.
+
 2012-08-22 Yamashita Yuu <yamashita@geishatokyo.com>
 	* Release: 0.3.0
 	* Made "non-sticky" mode as default. Now no sessions are cached in jetty's JVM heap.
