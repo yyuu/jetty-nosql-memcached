@@ -102,16 +102,6 @@
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.geishatokyo.jetty</groupId>
-				<artifactId>jetty-nosql-memcached-kryo</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.geishatokyo.jetty</groupId>
-				<artifactId>jetty-nosql-memcached-xstream</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
 				<groupId>com.geishatokyo.jetty.tests</groupId>
 				<artifactId>test-memcached-sessions</artifactId>
 				<version>${project.version}</version>
