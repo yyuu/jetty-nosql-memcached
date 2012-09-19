@@ -1,4 +1,4 @@
-2012-09-22 Yamashita Yuu <yamashita@geishatokyo.com>
+2012-09-19 Yamashita Yuu <yamashita@geishatokyo.com>
 	* Release: 0.3.1
 	* Delete invalidaetd sessions from memcached as soon as it is invalidated.
 	  Thanks Hridayesh Gupta.
