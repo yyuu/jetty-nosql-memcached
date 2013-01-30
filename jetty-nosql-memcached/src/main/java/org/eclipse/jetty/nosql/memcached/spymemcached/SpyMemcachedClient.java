@@ -29,11 +29,7 @@ public class SpyMemcachedClient extends AbstractMemcachedClient {
 
 	public boolean establish() throws KeyValueStoreClientException {
 		if (_connection != null) {
-			if (_connection.isAlive()) {
-				return true;
-			} else {
-				shutdown();
-			}
+			shutdown();
 		}
 		try {
 			ConnectionFactory cf = getConnectionFactory();
@@ -66,7 +62,7 @@ public class SpyMemcachedClient extends AbstractMemcachedClient {
 	}
 
 	public boolean isAlive() {
-		return _connection != null && _connection.isAlive();
+		return _connection != null;
 	}
 
 	public byte[] get(String key) throws KeyValueStoreClientException {
