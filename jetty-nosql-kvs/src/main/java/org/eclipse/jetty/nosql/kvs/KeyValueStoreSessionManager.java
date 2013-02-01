@@ -63,16 +63,7 @@ public class KeyValueStoreSessionManager extends NoSqlSessionManager {
 		if (sessionFactory == null) {
 			sessionFactory = new SerializableSessionFactory();
 		}
-		try {
-			// use context class loader during object deserialization.
-			// thanks Daniel Peters!
-			sessionFactory.setClassLoader(getContext().getClassLoader());
-			log.info("use context class loader for session deserializer.");
-			// FIXME: is there any safe way to refer context's class loader?
-			// getContext().getClassLoader() may raise SecurityException.
-			// this will be determine by policy configuration of JRE.
-		} catch(SecurityException error) {
-		}
+		sessionFactory.setClassLoader(Thread.currentThread().getContextClassLoader());
 		log.info("started.");
 	}
 
