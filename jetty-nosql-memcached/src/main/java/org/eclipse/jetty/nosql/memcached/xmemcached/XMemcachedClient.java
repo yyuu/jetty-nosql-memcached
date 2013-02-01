@@ -13,7 +13,7 @@ import org.eclipse.jetty.nosql.memcached.AbstractMemcachedClient;
 public class XMemcachedClient extends AbstractMemcachedClient {
 	private static final int FOREVER = 0;
 	private XMemcachedClientBuilder _builder = null;
-	private MemcachedClient _connection = null;
+	private MemcachedClient _client = null;
 	private Transcoder<byte[]> _transcoder = null;
 
 	public XMemcachedClient() {
@@ -26,8 +26,8 @@ public class XMemcachedClient extends AbstractMemcachedClient {
 	}
 
 	public boolean establish() throws KeyValueStoreClientException {
-		if (_connection != null) {
-			if (!_connection.isShutdown()) {
+		if (_client != null) {
+			if (!_client.isShutdown()) {
 				return true;
 			} else {
 				shutdown();
@@ -36,7 +36,7 @@ public class XMemcachedClient extends AbstractMemcachedClient {
 		
 		this._builder = getClientBuilder(_serverString);
 		try {
-			this._connection = _builder.build();
+			this._client = _builder.build();
 		} catch (IOException error) {
 			throw(new KeyValueStoreClientException(error));
 		}
@@ -50,20 +50,20 @@ public class XMemcachedClient extends AbstractMemcachedClient {
 	}
 
 	public boolean shutdown() throws KeyValueStoreClientException {
-		if (_connection != null) {
+		if (_client != null) {
 			try {
-				_connection.shutdown();
+				_client.shutdown();
 			} catch (IOException error) {
 				throw(new KeyValueStoreClientException(error));
 			} finally {
-				_connection = null;
+				_client = null;
 			}
 		}
 		return true;
 	}
 
 	public boolean isAlive() {
-		return this._connection != null && !this._connection.isShutdown();
+		return this._client != null && !this._client.isShutdown();
 	}
 
 	public byte[] get(String key) throws KeyValueStoreClientException {
@@ -72,7 +72,7 @@ public class XMemcachedClient extends AbstractMemcachedClient {
 		}
 		byte[] raw = null;
 		try {
-			raw = _connection.get(key);
+			raw = _client.get(key);
 		} catch (Exception error) {
 			throw(new KeyValueStoreClientException(error));
 		}
@@ -89,7 +89,7 @@ public class XMemcachedClient extends AbstractMemcachedClient {
 		}
 		boolean result = false;
 		try {
-			result = _connection.set(key, exp, raw);
+			result = _client.set(key, exp, raw);
 		} catch (Exception error) {
 			throw(new KeyValueStoreClientException(error));
 		}
@@ -106,7 +106,7 @@ public class XMemcachedClient extends AbstractMemcachedClient {
 		}
 		boolean result = false;
 		try {
-			result = _connection.add(key, exp, raw);
+			result = _client.add(key, exp, raw);
 		} catch (Exception error) {
 			throw(new KeyValueStoreClientException(error));
 		}
@@ -119,7 +119,7 @@ public class XMemcachedClient extends AbstractMemcachedClient {
 		}
 		boolean result = false;
 		try {
-			result = _connection.delete(key);
+			result = _client.delete(key);
 		} catch (Exception error) {
 			throw(new KeyValueStoreClientException(error));
 		}

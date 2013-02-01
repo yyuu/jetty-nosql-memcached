@@ -15,7 +15,7 @@ import org.eclipse.jetty.nosql.memcached.AbstractMemcachedClient;
 
 public class SpyMemcachedClient extends AbstractMemcachedClient {
 	private static final int FOREVER = 0;
-	private MemcachedClient _connection = null;
+	private MemcachedClient _client = null;
 	private Transcoder<byte[]> _transcoder = null;
 
 	public SpyMemcachedClient() {
@@ -28,15 +28,15 @@ public class SpyMemcachedClient extends AbstractMemcachedClient {
 	}
 
 	public boolean establish() throws KeyValueStoreClientException {
-		if (_connection != null) {
+		if (_client != null) {
 			shutdown();
 		}
 		try {
 			ConnectionFactory cf = getConnectionFactory();
 			if (cf == null) {
-				this._connection = new MemcachedClient(AddrUtil.getAddresses(_serverString));
+				this._client = new MemcachedClient(AddrUtil.getAddresses(_serverString));
 			} else {
-				this._connection = new MemcachedClient(cf, AddrUtil.getAddresses(_serverString));
+				this._client = new MemcachedClient(cf, AddrUtil.getAddresses(_serverString));
 			}
 		} catch (IOException error) {
 			throw(new KeyValueStoreClientException(error));
@@ -54,24 +54,24 @@ public class SpyMemcachedClient extends AbstractMemcachedClient {
 	}
 
 	public boolean shutdown() throws KeyValueStoreClientException {
-		if (_connection != null) {
-			_connection.shutdown();
-			_connection = null;
+		if (_client != null) {
+			_client.shutdown();
+			_client = null;
 		}
 		return true;
 	}
 
 	public boolean isAlive() {
-		return _connection != null;
+		return _client != null;
 	}
 
 	public byte[] get(String key) throws KeyValueStoreClientException {
 		if (!isAlive()) {
 			throw(new KeyValueStoreClientException(new IllegalStateException("client not established")));
 		}
-		byte[] raw;
+		byte[] raw = null;
 		try {
-			Future<byte[]> f = _connection.asyncGet(key, _transcoder);
+			Future<byte[]> f = _client.asyncGet(key, _transcoder);
 			raw = f.get(_timeoutInMs, TimeUnit.MILLISECONDS);
 		} catch (Exception error) {
 			throw(new KeyValueStoreClientException(error));
@@ -89,7 +89,7 @@ public class SpyMemcachedClient extends AbstractMemcachedClient {
 		}
 		boolean result;
 		try {
-			Future<Boolean> f = _connection.set(key, exp, raw, _transcoder);
+			Future<Boolean> f = _client.set(key, exp, raw, _transcoder);
 			result = f.get(_timeoutInMs, TimeUnit.MILLISECONDS);
 		} catch (Exception error) {
 			throw(new KeyValueStoreClientException(error));
@@ -107,7 +107,7 @@ public class SpyMemcachedClient extends AbstractMemcachedClient {
 		}
 		boolean result;
 		try {
-			Future<Boolean> f = _connection.add(key, exp, raw, _transcoder);
+			Future<Boolean> f = _client.add(key, exp, raw, _transcoder);
 			result = f.get(_timeoutInMs, TimeUnit.MILLISECONDS);
 		} catch (Exception error) {
 			throw(new KeyValueStoreClientException(error));
@@ -121,7 +121,7 @@ public class SpyMemcachedClient extends AbstractMemcachedClient {
 		}
 		boolean result;
 		try {
-			Future<Boolean> f = _connection.delete(key);
+			Future<Boolean> f = _client.delete(key);
 			result = f.get(_timeoutInMs, TimeUnit.MILLISECONDS);
 		} catch (Exception error) {
 			throw(new KeyValueStoreClientException(error));
