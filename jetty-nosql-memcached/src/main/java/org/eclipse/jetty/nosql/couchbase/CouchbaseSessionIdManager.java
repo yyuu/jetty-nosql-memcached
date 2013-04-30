@@ -76,9 +76,11 @@ public class CouchbaseSessionIdManager extends KeyValueStoreSessionIdManager {
 		client.setTimeoutInMs(getTimeoutInMs());
 		client.setBucketName(this._bucketName);
 		client.setBucketPassword(this._bucketPassword);
-		client.setFallbackServerString(this._fallbackServerString);
-		client.setFallbackBucketName(this._fallbackBucketName);
-		client.setFallbackBucketPassword(this._fallbackBucketPassword);
+		if(this._fallbackServerString != null){
+			client.setFallbackServerString(this._fallbackServerString);
+			client.setFallbackBucketName(this._fallbackBucketName);
+			client.setFallbackBucketPassword(this._fallbackBucketPassword);
+		}
 		
 		return client;
 	}
