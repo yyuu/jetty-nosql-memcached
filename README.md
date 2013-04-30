@@ -6,6 +6,7 @@
 ## Overview
 
 SessionManager implementation for Jetty based on jetty-nosql.
+SessionManager implementation for Jetty based on jetty-nosql with Couchbase implementation.
 
 
 ## Install
@@ -162,6 +163,143 @@ You can configure the behavior of session manager with following setters.
   * set session serializer. org.eclipse.jetty.nosql.kvs.session.serializable.SerializableSessionFactory is used by default.
 
 
+
+### Configuring "session ID manager" for Couchbase
+
+SessionIdManagers can be configured in files under `${JETTY_HOME}/etc`.  In following example, using `${JETTY_HOME}/etc/jetty.xml`.
+
+    <?xml version="1.0"?>
+    <Configure id="Server" class="org.eclipse.jetty.server.Server">
+      
+      (... snip ...)
+	  <Set name="sessionIdManager">
+	    <New id="couchbaseSessionIdManager" class="org.eclipse.jetty.nosql.couchbase.CouchbaseSessionIdManager">
+	      <Arg><Ref id="Server"/></Arg>
+	      <Set name="serverString">localhost:8091</Set>
+	      <Set name="BucketName">jettysession</Set>
+	      <Set name="BucketPassword">password</Set>
+	      <Set name="keyPrefix">session:</Set>
+	    </New>
+	  </Set>
+	  <Call name="setAttribute">
+	    <Arg>couchbaseSessionIdManager</Arg>
+	    <Arg><Ref id="couchbaseSessionIdManager"/></Arg>
+	  </Call>
+    <!-- // equivalent in Java:
+      Server server = ...;
+      CouchbaseSessionIdManager couchbaseSessionIdManager = new CouchbaseSessionIdManager(server);
+      CouchbaseSessionIdManager.setServerString("localhost:8091");
+      CouchbaseSessionIdManager.setKeyPrefix("session:");
+      server.setSessionIdManager(couchbaseSessionIdManager);
+      server.setAttribute("couchbaseSessionIdManager", couchbaseSessionIdManager);
+      -->
+    </Configure>
+
+#### Extra options for "session ID manager"
+
+You can configure the behavior of session ID manager with following setters.
+* If the session key is not found in primary bucket it would be searched in fallback bucket described by following 3 params
+* setFallbackServerString(String serverString)
+  * Space separated fallback host:port . This could be usefull during bucket migration. Eg: "<host>:8091 <host>:8091"
+* setFallbackBucketName(String bucketName)
+  * Fallback couchbase bucket name.
+* setFallbackBucketPassword(int bucketPassword)
+  * Fallback couchbase bucket's password
+
+* setClientFactory(AbstractMemcachedClientFactory cf)
+  * set memcached client. org.eclipse.jetty.nosql.memcached.spymemcached.SpyMemcachedClientFactory is used by default.
+* setDefaultExpiry(int defaultExpiry)
+  * set default expiry of sessions on memcached.
+* setKeyPrefix(String keyPrefix)
+  * use keyPrefix for session key prefix on memcached.
+* setKeySuffix(String keySuffix)
+  * use keySuffix for session key suffix on memcached.
+* setServerString(String serverString)
+  * specify server address and port in string. multiple hosts can be specified with spaces.
+* setTimeoutInMs(int timeoutInMS)
+  * set timeout for memcached connections.
+
+
+### Configuring "session manager" couchbase
+
+SessionManagers can be configured by either `${APP_ROOT}/WEB-INF/jetty-web.xml` or `${JETTY_HOME}/context/${APP_NAME}.xml`.
+
+Sample configuration for `${APP_ROOT}/WEB-INF/jetty-web.xml`:
+
+    <?xml version="1.0" encoding="UTF-8"?>
+    <Configure class="org.eclipse.jetty.webapp.WebAppContext">
+      
+      (... snip ...)
+      
+      <Get name="server">
+        <Get id="couchbaseSessionIdManager" name="sessionIdManager" />
+      </Get>
+      <Set name="sessionHandler">
+        <New class="org.eclipse.jetty.server.session.SessionHandler">
+          <Arg>
+            <New class="org.eclipse.jetty.nosql.memcached.CouchbaseSessionManager">
+              <Set name="sessionIdManager">
+                <Ref id="couchbaseSessionIdManager" />
+              </Set>
+            </New>
+          </Arg>
+        </New>
+      </Set>
+    </Configure>
+    <!-- // equivalent in Java
+      WebAppContext context = ...
+      Server server = ...;
+      CouchbaseSessionIdManager sessionIdManager = server.getAttribute("couchbaseSessionIdManager");
+      CouchbaseSessionManager sessionManager = new CouchbaseSessionManager();
+      sessionManager.setSessionIdManager(sessionIdManager);
+      context.setSessionHandler(new SessionHandler(sessionManager));
+      -->
+
+Sample configuration for `${JETTY_HOME}/context/${APP_NAME}.xml`:
+
+    <?xml version="1.0"  encoding="ISO-8859-1"?>
+    <!DOCTYPE Configure PUBLIC "-//Mort Bay Consulting//DTD Configure//EN" "http://jetty.eclipse.org/configure.dtd">
+    <Configure class="org.eclipse.jetty.webapp.WebAppContext">
+      
+      (... snip ...)
+      
+	  <Ref name="Server" id="Server">
+	    <Call id="sessionIdManager" name="getAttribute">
+	      <Arg>couchbaseSessionIdManager</Arg>
+	    </Call>
+	  </Ref>
+	  <Set name="sessionHandler">
+	    <New class="org.eclipse.jetty.server.session.SessionHandler">
+	      <Arg>
+		<New id="couchbaseSessionManager" class="org.eclipse.jetty.nosql.couchbase.CouchbaseSessionManager">
+		  <Set name="sessionIdManager">
+		    <Ref id="sessionIdManager"/>
+		  </Set>
+		</New>
+	      </Arg>
+	    </New>
+	  </Set>
+    </Configure>
+    <!-- // equivalent in Java
+      WebAppContext context = ...
+      Server server = ...;
+      CouchbaseSessionIdManager sessionIdManager = server.getAttribute("couchbaseSessionIdManager");
+      CouchbaseSessionManager sessionManager = new CouchbaseSessionManager();
+      sessionManager.setSessionIdManager(sessionIdManager);
+      sessionManager.setSessionFactory(new XStreamSessionFactory());
+      context.setSessionHandler(new SessionHandler(sessionManager));
+      -->
+
+
+#### Extra options for "session manager"
+
+You can configure the behavior of session manager with following setters.
+
+* setSessionIdManager(SessionIdManager idManager)
+  * session id manager you created.
+* setSessionFactory(AbstractSessionFactory sf)
+  * set session serializer. org.eclipse.jetty.nosql.kvs.session.serializable.SerializableSessionFactory is used by default.
+
 ## Development
 
 ### Requirements
@@ -174,6 +312,7 @@ All library dependencies can be resolved from Maven.
 * [xmemcached](http://code.google.com/p/xmemcached/)
 * [kryo](http://code.google.com/p/kryo/)
 * [xstream](http://xstream.codehaus.org/)
+* [couchbase-client](http://www.couchbase.com/develop/java/current)
 
 ### Build
 
