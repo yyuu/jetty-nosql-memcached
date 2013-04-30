@@ -5,8 +5,7 @@
 
 ## Overview
 
-SessionManager implementation for Jetty based on jetty-nosql.
-SessionManager implementation for Jetty based on jetty-nosql with Couchbase implementation.
+SessionManager implementation for Jetty based on jetty-nosql supporting Couchbase & Memcached.
 
 
 ## Install
@@ -200,7 +199,7 @@ SessionIdManagers can be configured in files under `${JETTY_HOME}/etc`.  In foll
 You can configure the behavior of session ID manager with following setters.
 * If the session key is not found in primary bucket it would be searched in fallback bucket described by following 3 params
 * setFallbackServerString(String serverString)
-  * Space separated fallback host:port . This could be usefull during bucket migration. Eg: "<host>:8091 <host>:8091"
+  * Space separated fallback host:port . This could be usefull during bucket migration. Eg: "host:port host:port"
 * setFallbackBucketName(String bucketName)
   * Fallback couchbase bucket name.
 * setFallbackBucketPassword(int bucketPassword)
