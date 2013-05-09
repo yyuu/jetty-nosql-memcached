@@ -10,6 +10,8 @@ import java.util.concurrent.TimeUnit;
 import org.eclipse.jetty.nosql.couchbase.AbstractCouchbaseClient;
 import org.eclipse.jetty.nosql.kvs.KeyValueStoreClientException;
 import org.eclipse.jetty.nosql.memcached.spymemcached.NullTranscoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import net.spy.memcached.ConnectionObserver;
 import net.spy.memcached.DefaultHashAlgorithm;
@@ -25,6 +27,7 @@ public class JettyCouchbaseClient extends AbstractCouchbaseClient {
 	private CouchbaseClient _client = null;
 	private CouchbaseClient _fallbackClient = null;
 	private Transcoder<byte[]> _transcoder = null;
+	private static Logger log = LoggerFactory.getLogger("JettyCouchbaseClient");
 
 	public JettyCouchbaseClient() {
 		this("127.0.0.1:8091");
@@ -51,6 +54,8 @@ public class JettyCouchbaseClient extends AbstractCouchbaseClient {
 	        cfb.setFailureMode(FailureMode.Redistribute);
 	        cfb.setMaxReconnectDelay(30);
 	        cfb.setReadBufferSize(16384);
+	        cfb.setOpTimeout(5000);
+	        cfb.setOpQueueMaxBlockTime(10000);
 	        cfb.setProtocol(CouchbaseConnectionFactoryBuilder.Protocol.BINARY); 
 	        cfb.setLocatorType(CouchbaseConnectionFactoryBuilder.Locator.CONSISTENT); 
 	        cfb.setHashAlg(DefaultHashAlgorithm.KETAMA_HASH);
@@ -58,13 +63,12 @@ public class JettyCouchbaseClient extends AbstractCouchbaseClient {
 	     		
 	        client = new CouchbaseClient(cf); 
 			client.addObserver(new ConnectionObserver() {
-				
 				public void connectionLost(SocketAddress arg0) {
-					//client.shutdown();
-					//client = null;
+					log.debug("Couchbase Connection Lost");
 				}
 				
 				public void connectionEstablished(SocketAddress arg0, int arg1) {
+					log.debug("Couchbase Connection Established");
 				}
 			});
 	    } catch (Exception e) {
