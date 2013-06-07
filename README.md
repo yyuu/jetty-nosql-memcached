@@ -7,10 +7,9 @@
 
 SessionManager implementation for Jetty based on jetty-nosql.
 
-
 ## Install
 
-jetty-nosql-memcached is an extension for Jetty-8.
+jetty-nosql-memcached is an extension for Jetty-9.
 You have to install jars into jetty's `${jetty.home}/lib/ext`.
 
 Built jars of jetty-nosql-memcached can be found on Maven Central.
