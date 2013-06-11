@@ -1,27 +1,22 @@
-# jetty-nosql-memcached
+# jetty-nosql-couchbase
 
-[![Build Status](https://secure.travis-ci.org/yyuu/jetty-nosql-memcached.png?branch=master)](http://travis-ci.org/yyuu/jetty-nosql-memcached)
-[![Build Status](https://buildhive.cloudbees.com/job/yyuu/job/jetty-nosql-memcached/badge/icon)](https://buildhive.cloudbees.com/job/yyuu/job/jetty-nosql-memcached/)
+[![Build Status](https://secure.travis-ci.org/mm87642/jetty-nosql-couchbase.png?branch=master)](http://travis-ci.org/mm87642/jetty-nosql-couchbase)
+[![Build Status](https://buildhive.cloudbees.com/job/mm87642/job/jetty-nosql-couchbase/badge/icon)](https://buildhive.cloudbees.com/job/mm87642/job/jetty-nosql-couchbase/)
 
 ## Overview
 
-SessionManager implementation for Jetty based on jetty-nosql supporting Couchbase & Memcached.
+SessionManager implementation for Jetty based on jetty-nosql-memcached supporting Couchbase.
 
 
 ## Install
 
-jetty-nosql-memcached is an extension for Jetty-8.
+jetty-nosql-couchbase is an extension for jetty-nosql-kvs.
 You have to install jars into jetty's `${jetty.home}/lib/ext`.
-
-Built jars of jetty-nosql-memcached can be found on Maven Central.
-You can install one of them without building.
-
-- http://search.maven.org/#search%7Cga%7C1%7Ca%3A%22jetty-nosql-memcached%22
 
 *NOTE*
 
-You must install jetty-nosql-memcached into Jetty with all dependent jars, such like jetty-nosql and SpyMemcached.
-If you're not sure, it's better to use all-in-one jar like `jetty-nosql-memcached-${version}-jar-with-dependencies.jar`.
+You must install jetty-nosql-couchbase into Jetty with all dependent jars, such like jetty-nosql-memcached and Couchbase.
+If you're not sure, it's better to use all-in-one jar like `jetty-nosql-couchbase-${version}-jar-with-dependencies.jar`.
 You don't have to be aware of missing dependencies since all-in-one jar includes all dependencies in single jar file.
 
 
@@ -331,8 +326,8 @@ Use maven-release-plguin.
 
 ## License
 
-* Copyright (c) 2011-2012 Geisha Tokyo Entertainment, Inc.
-* Copyright (c) 2011-2012 Yamashita, Yuu
+* Copyright (c) 2013 Manish Mishra <<mm87642@gmail.com>>
+* Copyright (c) 2013 Yamashita, Yuu <<yamashita@geishatokyo.com>>
 
 All rights reserved. This program and the accompanying materials
 are made available under the terms of the Eclipse Public License v1.0
