@@ -79,7 +79,7 @@ You can configure the behavior of session ID manager with following setters.
 
 ### Configuring "session manager"
 
-SessionManagers can be configured by either `${APP_ROOT}/WEB-INF/jetty-web.xml` or `${JETTY_HOME}/context/${APP_NAME}.xml`.
+SessionManagers can be configured by either `${APP_ROOT}/WEB-INF/jetty-web.xml` or `${JETTY_HOME}/webapps/${APP_NAME}.xml`.
 
 Sample configuration for `${APP_ROOT}/WEB-INF/jetty-web.xml`:
 
@@ -112,7 +112,7 @@ Sample configuration for `${APP_ROOT}/WEB-INF/jetty-web.xml`:
       context.setSessionHandler(new SessionHandler(sessionManager));
       -->
 
-Sample configuration for `${JETTY_HOME}/context/${APP_NAME}.xml`:
+Sample configuration for `${JETTY_HOME}/webapps/${APP_NAME}.xml`:
 
     <?xml version="1.0"  encoding="ISO-8859-1"?>
     <!DOCTYPE Configure PUBLIC "-//Mort Bay Consulting//DTD Configure//EN" "http://jetty.eclipse.org/configure.dtd">
