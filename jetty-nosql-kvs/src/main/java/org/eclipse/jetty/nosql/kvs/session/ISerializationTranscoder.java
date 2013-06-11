@@ -19,7 +19,7 @@ public interface ISerializationTranscoder {
 
 	/**
 	 * serialize an object to byte array
-	 * @param object to serialize
+	 * @param obj to serialize
 	 * @return serialized data
 	 * @throws Exception
 	 */
@@ -27,8 +27,8 @@ public interface ISerializationTranscoder {
 
 	/**
 	 * deserialize object(s) from byte array
-	 * @param serialized data
-	 * @param type of serialized data
+	 * @param raw data
+	 * @param klass of serialized data
 	 * @return deserialized object(s)
 	 * @throws Exception
 	 */
