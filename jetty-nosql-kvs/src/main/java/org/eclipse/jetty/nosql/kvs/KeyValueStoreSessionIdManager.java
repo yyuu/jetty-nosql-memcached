@@ -85,6 +85,7 @@ public abstract class KeyValueStoreSessionIdManager extends AbstractSessionIdMan
         {
             throw new IllegalStateException("newClient(" + _serverString + ") returns null.");
         }
+        log.info("use " + _client.getClass().getSimpleName() + " as client factory.");
         _client.establish();
         log.info("started.");
     }
