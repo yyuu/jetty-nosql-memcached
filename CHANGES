@@ -1,3 +1,8 @@
+2013-XX-YY Yamashita Yuu <yamashita@geishatokyo.com>
+  * Release: 0.4.0
+  * Update to Jetty 9.
+  * Change target JVM to Java 7 since Jetty 9 only supports Java 7 or later.
+
 2012-09-19 Yamashita Yuu <yamashita@geishatokyo.com>
 	* Release: 0.3.1
 	* Delete invalidaetd sessions from memcached as soon as it is invalidated.
