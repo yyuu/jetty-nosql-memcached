@@ -5,11 +5,11 @@ package org.eclipse.jetty.nosql.kvs.session.kryo;
  */
 @Deprecated
 public class KryoSessionFacade extends KryoSessionFactory {
-	public KryoSessionFacade() {
-		this(Thread.currentThread().getContextClassLoader());
-	}
+  public KryoSessionFacade() {
+    this(Thread.currentThread().getContextClassLoader());
+  }
 
-	public KryoSessionFacade(ClassLoader cl) {
-		super(cl);
-	}
+  public KryoSessionFacade(ClassLoader cl) {
+    super(cl);
+  }
 }
