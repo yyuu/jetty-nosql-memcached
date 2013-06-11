@@ -75,6 +75,7 @@ public class KeyValueStoreSessionManager extends NoSqlSessionManager
         {
             sessionFactory = new SerializableSessionFactory();
         }
+        log.info("use " + sessionFactory.getClass().getSimpleName() + " as session factory.");
         try
         {
             // use context class loader during object deserialization.
