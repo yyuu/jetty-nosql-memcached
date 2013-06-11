@@ -3,9 +3,11 @@
 	<parent>
 		<groupId>com.geishatokyo.jetty</groupId>
 		<artifactId>jetty-nosql-memcached-parent</artifactId>
-		<version>0.3.2-SNAPSHOT</version>
+		<version>0.3.1</version>
 	</parent>
+  <groupId>com.github.mm87642</groupId>
 	<artifactId>jetty-nosql-couchbase</artifactId>
+	<version>0.3.1-SNAPSHOT</version>
 	<name>jetty-nosql-couchbase</name>
 	<description>A session manager impl for jetty to store sessions on Couchbase with Java serialization.</description>
 	<profiles>
@@ -72,10 +74,12 @@
 		<dependency>
 			<groupId>com.geishatokyo.jetty</groupId>
 			<artifactId>jetty-nosql-kvs</artifactId>
+			<version>0.3.1</version>
 		</dependency>
 		<dependency>
 			<groupId>com.geishatokyo.jetty</groupId>
 			<artifactId>jetty-nosql-memcached</artifactId>
+			<version>0.3.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
