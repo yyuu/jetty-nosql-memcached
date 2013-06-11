@@ -8,6 +8,7 @@ import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
 public class KryoTranscoder implements ISerializationTranscoder {
+  private final int initialBufferSize = 8192; // FIXME: how much is enough?
   private Kryo kryo = null;
 
   public KryoTranscoder() {
@@ -23,7 +24,7 @@ public class KryoTranscoder implements ISerializationTranscoder {
   public byte[] encode(Object obj) throws TranscoderException {
     byte[] raw = null;
     try {
-      Output output = new Output( );
+      Output output = new Output(initialBufferSize, -1);
       kryo.writeObject(output, obj);
       output.close();
       raw = output.getBuffer();
