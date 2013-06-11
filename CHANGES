@@ -1,3 +1,7 @@
+2013-XX-YY Yamashita Yuu <yamashita@geishatokyo.com>
+  * Release: 0.4.0
+  * Update to jetty 9
+
 2012-09-19 Yamashita Yuu <yamashita@geishatokyo.com>
 	* Release: 0.3.1
 	* Delete invalidaetd sessions from memcached as soon as it is invalidated.
