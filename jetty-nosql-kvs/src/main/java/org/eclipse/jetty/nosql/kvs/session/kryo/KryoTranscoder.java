@@ -4,7 +4,8 @@ import org.eclipse.jetty.nosql.kvs.session.ISerializationTranscoder;
 import org.eclipse.jetty.nosql.kvs.session.TranscoderException;
 
 import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.ObjectBuffer;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 
 public class KryoTranscoder implements ISerializationTranscoder {
 	private Kryo kryo = null;
@@ -15,15 +16,17 @@ public class KryoTranscoder implements ISerializationTranscoder {
 
 	public KryoTranscoder(ClassLoader cl) {
 		kryo = new Kryo();
-		kryo.setRegistrationOptional(true);
+		kryo.setRegistrationRequired(false);
 		kryo.setClassLoader(cl);
 	}
 
 	public byte[] encode(Object obj) throws TranscoderException {
 		byte[] raw = null;
 		try {
-			ObjectBuffer buf = new ObjectBuffer(kryo);
-			raw = buf.writeObject(obj);
+			Output output = new Output( );
+			kryo.writeObject(output, obj);
+			output.close();
+			raw = output.getBuffer();
 		} catch (Exception error) {
 			throw(new TranscoderException(error));
 		}
@@ -33,8 +36,8 @@ public class KryoTranscoder implements ISerializationTranscoder {
 	public <T> T decode(byte[] raw, Class<T> klass) throws TranscoderException {
 		T obj = null;
 		try {
-		ObjectBuffer buf = new ObjectBuffer(kryo);
-		obj = buf.readObject(raw, klass);
+			Input input = new Input(raw);
+			obj = kryo.readObject(input, klass);
 		} catch (Exception error) {
 			throw(new TranscoderException(error));
 		}
