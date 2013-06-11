@@ -44,9 +44,7 @@
 	<modules>
 		<module>jetty-nosql-kvs</module>
 		<module>jetty-nosql-memcached</module>
-		<!-- commented as it fails with jetty 9
 		<module>tests</module>
-		-->
 	</modules>
 	<licenses>
 		<license>
