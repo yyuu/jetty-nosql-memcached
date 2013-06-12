@@ -1,4 +1,4 @@
-2013-XX-YY Yamashita Yuu <yamashita@geishatokyo.com>
+2013-06-12 Yamashita Yuu <yamashita@geishatokyo.com>
   * Release: 0.4.0
   * Update to Jetty 9.
   * Change target JVM to Java 7 since Jetty 9 only supports Java 7 or later.
