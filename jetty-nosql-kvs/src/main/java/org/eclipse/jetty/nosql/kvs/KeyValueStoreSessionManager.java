@@ -16,6 +16,7 @@ package org.eclipse.jetty.nosql.kvs;
 
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.eclipse.jetty.nosql.NoSqlSession;
 import org.eclipse.jetty.nosql.NoSqlSessionManager;
@@ -538,11 +539,8 @@ public class KeyValueStoreSessionManager extends NoSqlSessionManager
          */
         public void initializeAttribute(String name, Object value)
         {
-            if (value != null)
-            {
-                getAttributeMap().put(name, value);
-                attributeHashes.put(name, value.hashCode());
-            }
+            getAttributeMap().put(name, value);
+            attributeHashes.put(name, safeHash(value));
         }
 
         /**
@@ -553,22 +551,47 @@ public class KeyValueStoreSessionManager extends NoSqlSessionManager
         public Object doPutOrRemove(String name, Object value)
         {
             Object oldValue = doGet(name);
-            Integer oldHash = attributeHashes.get(name);
-            int newHash = (value == null) ? 0 : value.hashCode();
-            if (valueEquals(oldValue, value) && (oldHash != null) && (newHash == oldHash.intValue()))
+            return (valueEquals(oldValue, value)) ? value : super.doPutOrRemove(name, value);
+        }
+
+        /**
+         * Overridden to update the session state prior to saving if any attribute value has a different
+         * hash code than it used to.  This allows us to detect changes when a mutable object is used as
+         * an attribute value.
+         */
+        @Override
+        protected void complete()
+        {
+            for (Map.Entry<String, Object> a: getAttributeMap().entrySet())
             {
-                return value;
+                Integer oldHash = attributeHashes.get(a.getKey());
+                if (oldHash == null || oldHash.intValue() != safeHash(a.getValue()))
+                {
+                    // super.doPutOrRemove always sets the dirty state
+                    super.doPutOrRemove(a.getKey(), a.getValue());
+                }
             }
-            else
+            super.complete();
+        }
+
+        @Override
+        protected void save(boolean activate)
+        {
+            for (Map.Entry<String, Object> a: getAttributeMap().entrySet())
             {
-                attributeHashes.put(name, newHash);
-                return super.doPutOrRemove(name, value);
+                attributeHashes.put(a.getKey(), safeHash(a.getValue()));
             }
+            super.save(activate);
         }
 
         private boolean valueEquals(Object ov, Object nv)
         {
             return (nv == null) ? (ov == null) : nv.equals(ov);
+        }
+
+        private int safeHash(Object o)
+        {
+            return (o == null) ? 0 : o.hashCode();
         }
     }
 }
