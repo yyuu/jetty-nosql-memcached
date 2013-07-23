@@ -335,7 +335,7 @@ public class KeyValueStoreSessionManager extends NoSqlSessionManager
             long version = data.getVersion();
             long created = data.getCreationTime();
             long accessed = data.getAccessed();
-            NoSqlSession session = new NoSqlSession(this, created, accessed, clusterId, version);
+            SmarterNoSqlSession session = new SmarterNoSqlSession(this, created, accessed, clusterId, version);
 
             // get the attributes for the context
             Enumeration<String> attrs = data.getAttributeNames();
@@ -348,7 +348,7 @@ public class KeyValueStoreSessionManager extends NoSqlSessionManager
                     String name = attrs.nextElement();
                     Object value = data.getAttribute(name);
 
-                    session.doPutOrRemove(name, value);
+                    session.initializeAttribute(name, value);
                     session.bindValue(name, value);
 
                 }
@@ -515,5 +515,43 @@ public class KeyValueStoreSessionManager extends NoSqlSessionManager
         }
         deleteKey(session.getClusterId());
         setKey(newClusterId, data);
+    }
+
+    /*
+     * Overrides some of the state logic in NoSqlSession to avoid unnecessary session store writes when the
+     * session attributes have not changed.  This is a workaround for Jetty issue 413484:
+     * https://bugs.eclipse.org/bugs/show_bug.cgi?id=413484
+     */
+    private static class SmarterNoSqlSession extends NoSqlSession
+    {
+        public SmarterNoSqlSession(NoSqlSessionManager manager, long created, long accessed, String clusterId, Object version)
+        {
+            super(manager, created, accessed, clusterId, version);
+        }
+
+        /**
+         * Sets an attribute without changing the session's "dirty" state.  Use this only when initializing a
+         * freshly loaded session.
+         */
+        public void initializeAttribute(String name, Object value)
+        {
+            getAttributeMap().put(name, value);
+        }
+
+        /**
+         * Overridden to change the attribute (which sets the "dirty" state) only if the new attribute value
+         * is not equal to the old attribute value.
+         */
+        @Override
+        public Object doPutOrRemove(String name, Object value)
+        {
+            Object oldValue = doGet(name);
+            return (valueEquals(oldValue, value)) ? value : super.doPutOrRemove(name, value);
+        }
+
+        private boolean valueEquals(Object ov, Object nv)
+        {
+            return (nv == null) ? (ov == null) : nv.equals(ov);
+        }
     }
 }
