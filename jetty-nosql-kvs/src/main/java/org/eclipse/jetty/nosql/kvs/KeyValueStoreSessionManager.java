@@ -15,6 +15,7 @@ package org.eclipse.jetty.nosql.kvs;
 //========================================================================
 
 import java.util.Enumeration;
+import java.util.HashMap;
 
 import org.eclipse.jetty.nosql.NoSqlSession;
 import org.eclipse.jetty.nosql.NoSqlSessionManager;
@@ -524,6 +525,8 @@ public class KeyValueStoreSessionManager extends NoSqlSessionManager
      */
     private static class SmarterNoSqlSession extends NoSqlSession
     {
+        private HashMap<String, Integer> attributeHashes = new HashMap<String, Integer>();
+
         public SmarterNoSqlSession(NoSqlSessionManager manager, long created, long accessed, String clusterId, Object version)
         {
             super(manager, created, accessed, clusterId, version);
@@ -535,7 +538,11 @@ public class KeyValueStoreSessionManager extends NoSqlSessionManager
          */
         public void initializeAttribute(String name, Object value)
         {
-            getAttributeMap().put(name, value);
+            if (value != null)
+            {
+                getAttributeMap().put(name, value);
+                attributeHashes.put(name, value.hashCode());
+            }
         }
 
         /**
@@ -546,7 +553,17 @@ public class KeyValueStoreSessionManager extends NoSqlSessionManager
         public Object doPutOrRemove(String name, Object value)
         {
             Object oldValue = doGet(name);
-            return (valueEquals(oldValue, value)) ? value : super.doPutOrRemove(name, value);
+            Integer oldHash = attributeHashes.get(name);
+            int newHash = (value == null) ? 0 : value.hashCode();
+            if (valueEquals(oldValue, value) && (oldHash != null) && (newHash == oldHash.intValue()))
+            {
+                return value;
+            }
+            else
+            {
+                attributeHashes.put(name, newHash);
+                return super.doPutOrRemove(name, value);
+            }
         }
 
         private boolean valueEquals(Object ov, Object nv)
