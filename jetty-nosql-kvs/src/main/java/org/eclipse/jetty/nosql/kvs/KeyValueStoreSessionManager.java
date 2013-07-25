@@ -15,6 +15,8 @@ package org.eclipse.jetty.nosql.kvs;
 //========================================================================
 
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.eclipse.jetty.nosql.NoSqlSession;
 import org.eclipse.jetty.nosql.NoSqlSessionManager;
@@ -335,7 +337,7 @@ public class KeyValueStoreSessionManager extends NoSqlSessionManager
             long version = data.getVersion();
             long created = data.getCreationTime();
             long accessed = data.getAccessed();
-            NoSqlSession session = new NoSqlSession(this, created, accessed, clusterId, version);
+            SmarterNoSqlSession session = new SmarterNoSqlSession(this, created, accessed, clusterId, version);
 
             // get the attributes for the context
             Enumeration<String> attrs = data.getAttributeNames();
@@ -348,7 +350,7 @@ public class KeyValueStoreSessionManager extends NoSqlSessionManager
                     String name = attrs.nextElement();
                     Object value = data.getAttribute(name);
 
-                    session.doPutOrRemove(name, value);
+                    session.initializeAttribute(name, value);
                     session.bindValue(name, value);
 
                 }
@@ -515,5 +517,81 @@ public class KeyValueStoreSessionManager extends NoSqlSessionManager
         }
         deleteKey(session.getClusterId());
         setKey(newClusterId, data);
+    }
+
+    /*
+     * Overrides some of the state logic in NoSqlSession to avoid unnecessary session store writes when the
+     * session attributes have not changed.  This is a workaround for Jetty issue 413484:
+     * https://bugs.eclipse.org/bugs/show_bug.cgi?id=413484
+     */
+    private static class SmarterNoSqlSession extends NoSqlSession
+    {
+        private HashMap<String, Integer> attributeHashes = new HashMap<String, Integer>();
+
+        public SmarterNoSqlSession(NoSqlSessionManager manager, long created, long accessed, String clusterId, Object version)
+        {
+            super(manager, created, accessed, clusterId, version);
+        }
+
+        /**
+         * Sets an attribute without changing the session's "dirty" state.  Use this only when initializing a
+         * freshly loaded session.
+         */
+        public void initializeAttribute(String name, Object value)
+        {
+            getAttributeMap().put(name, value);
+            attributeHashes.put(name, safeHash(value));
+        }
+
+        /**
+         * Overridden to change the attribute (which sets the "dirty" state) only if the new attribute value
+         * is not equal to the old attribute value.
+         */
+        @Override
+        public Object doPutOrRemove(String name, Object value)
+        {
+            Object oldValue = doGet(name);
+            return (valueEquals(oldValue, value)) ? value : super.doPutOrRemove(name, value);
+        }
+
+        /**
+         * Overridden to update the session state prior to saving if any attribute value has a different
+         * hash code than it used to.  This allows us to detect changes when a mutable object is used as
+         * an attribute value.
+         */
+        @Override
+        protected void complete()
+        {
+            for (Map.Entry<String, Object> a: getAttributeMap().entrySet())
+            {
+                Integer oldHash = attributeHashes.get(a.getKey());
+                if (oldHash == null || oldHash.intValue() != safeHash(a.getValue()))
+                {
+                    // super.doPutOrRemove always sets the dirty state
+                    super.doPutOrRemove(a.getKey(), a.getValue());
+                }
+            }
+            super.complete();
+        }
+
+        @Override
+        protected void save(boolean activate)
+        {
+            for (Map.Entry<String, Object> a: getAttributeMap().entrySet())
+            {
+                attributeHashes.put(a.getKey(), safeHash(a.getValue()));
+            }
+            super.save(activate);
+        }
+
+        private boolean valueEquals(Object ov, Object nv)
+        {
+            return (nv == null) ? (ov == null) : nv.equals(ov);
+        }
+
+        private int safeHash(Object o)
+        {
+            return (o == null) ? 0 : o.hashCode();
+        }
     }
 }
