@@ -133,7 +133,7 @@ Sample configuration for `${JETTY_HOME}/webapps/${APP_NAME}.xml`:
                 <Ref id="memcachedSessionIdManager" />
               </Set>
               <Set name="sessionFactory">
-                <Ref id="org.eclipse.jetty.nosql.kvs.session.xstream.XStreamSessionFactory" />
+                <New class="org.eclipse.jetty.nosql.kvs.session.xstream.XStreamSessionFactory" />
               </Set>
             </New>
           </Arg>
