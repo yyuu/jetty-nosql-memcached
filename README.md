@@ -1,7 +1,6 @@
 # jetty-nosql-memcached
 
 [![Build Status](https://secure.travis-ci.org/yyuu/jetty-nosql-memcached.png?branch=master)](http://travis-ci.org/yyuu/jetty-nosql-memcached)
-[![Build Status](https://buildhive.cloudbees.com/job/yyuu/job/jetty-nosql-memcached/badge/icon)](https://buildhive.cloudbees.com/job/yyuu/job/jetty-nosql-memcached/)
 
 ## Overview
 
