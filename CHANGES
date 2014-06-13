@@ -1,3 +1,7 @@
+2014-06-13 Marlon Bernardes <marlonjb.cb@gmail.com>
+  * Release: 0.4.1
+  * Updated XStream (1.4.4 -> 1.4.7)
+
 2013-06-12 Yamashita Yuu <yamashita@geishatokyo.com>
   * Release: 0.4.0
   * Update to Jetty 9.
