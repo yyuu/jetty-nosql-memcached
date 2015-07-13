@@ -190,9 +190,9 @@ Use nexus-staging-maven-plugin.
 ```sh
 $ mvn versions:set -DnewVersion="${VERSION}"
 $ git commit -a -m "v${VERSION}"
-$ git tag "jetty-nosql-memcached-parent-${VERSION}"
 $ mvn clean deploy -DperformRelease -Dgpg.keyname="${GPG_KEYNAME}" -Dgpg.passphrase="${GPG_PASSPHRASE}"
-$ mvn nexus-staging:release
+$ mvn nexus-staging:release # may not work
+$ git tag "jetty-nosql-memcached-parent-${VERSION}"
 ```
 
 
