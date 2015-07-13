@@ -3,7 +3,7 @@
   <parent>
     <groupId>com.geishatokyo.jetty.tests</groupId>
     <artifactId>jetty-nosql-memcached-tests</artifactId>
-    <version>0.5.0</version>
+    <version>0.5.1-SNAPSHOT</version>
   </parent>
   <artifactId>test-memcached-sessions</artifactId>
   <name>test-memcached-sessions</name>
