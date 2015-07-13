@@ -1,5 +1,5 @@
 2015-07-13 Yamashita Yuu <peek824545201@gmail.com>
-  * Release: 0.4.1
+  * Release: 0.5.0
   * KeyValueStoreSessionManager triggers unnecessary session write on load (#16, #17)
   * Updated XStream (1.4.4 -> 1.4.7) (#25)
   * Update SpyMemcached (2.8.12 -> 2.12.0) (#28)
