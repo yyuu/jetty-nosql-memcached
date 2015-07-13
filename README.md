@@ -185,11 +185,14 @@ $ mvn clean package
 
 ### Release
 
-Use maven-release-plguin.
+Use nexus-staging-maven-plugin.
 
 ```sh
-$ mvn release:clean
-$ mvn -Darguments="-Dgpg.keyname=FB708C08 -Dgpg.passphrase=${GPG_PASSPHRASE}" release:prepare release:perform
+$ mvn versions:set -DnewVersion=X.Y.Z
+$ git commit -a -m 'X.Y.Z'
+$ git tag jetty-nosql-memcached-parent-X.Y.Z
+$ mvn clean deploy
+$ mvn nexus-staging:release
 ```
 
 
