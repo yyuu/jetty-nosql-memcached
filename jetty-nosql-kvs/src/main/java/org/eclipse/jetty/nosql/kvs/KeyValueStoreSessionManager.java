@@ -386,24 +386,6 @@ public class KeyValueStoreSessionManager extends NoSqlSessionManager
         return deleteKey(idInCluster);
     }
 
-    /*------------------------------------------------------------ */
-    @Override
-    protected void invalidateSessions() throws Exception
-    {
-        // do nothing.
-        // we do not want to invalidate all sessions on doStop().
-        log.debug("invalidateSessions: nothing to do.");
-    }
-
-    /*------------------------------------------------------------ */
-    @Override
-    protected void invalidateSession(final String idInCluster)
-    {
-        // do nothing.
-        // invalidated sessions will not save in KeyValueStoreSessionManager.save()
-        log.debug("invalidateSession: invalidating " + idInCluster);
-    }
-
     protected String mangleKey(final String idInCluster)
     {
         return idInCluster;
