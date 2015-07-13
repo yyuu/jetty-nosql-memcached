@@ -191,8 +191,7 @@ Use maven-release-plguin.
 
 ## License
 
-* Copyright (c) 2011-2013 Geisha Tokyo Entertainment, Inc.
-* Copyright (c) 2011-2013 Yamashita, Yuu
+* Copyright (c) 2011-2015 Yamashita, Yuu
 
 All rights reserved. This program and the accompanying materials
 are made available under the terms of the Eclipse Public License v1.0
