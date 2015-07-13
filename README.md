@@ -32,31 +32,31 @@ You need to configure both "session manager" and "session ID manager".
 
 SessionIdManagers can be configured in files under `${JETTY_HOME}/etc`.  In following example, using `${JETTY_HOME}/etc/jetty.xml`.
 
-    <?xml version="1.0"?>
-    <Configure id="Server" class="org.eclipse.jetty.server.Server">
-      
-      (... snip ...)
-      
-      <Set name="sessionIdManager">
-        <New id="memcachedSessionIdManager" class="org.eclipse.jetty.nosql.memcached.MemcachedSessionIdManager">
-          <Arg><Ref id="Server" /></Arg>
-          <Set name="serverString">localhost:11211</Set>
-          <Set name="keyPrefix">session:</Set>
-        </New>
-      </Set>
-      <Call name="setAttribute">
-        <Arg>memcachedSessionIdManager</Arg>
-        <Arg><Ref id="memcachedSessionIdManager" /></Arg>
-      </Call>
-    <!-- // equivalent in Java:
-      Server server = ...;
-      MemcachedSessionIdManager memcachedSessionIdManager = new MemcachedSessionIdManager(server);
-      memcachedSessionIdManager.setServerString("localhost:11211");
-      memcachedSessionIdManager.setKeyPrefix("session:");
-      server.setSessionIdManager(memcachedSessionIdManager);
-      server.setAttribute("memcachedSessionIdManager", memcachedSessionIdManager);
-      -->
-    </Configure>
+```xml
+<?xml version="1.0"?>
+<Configure id="Server" class="org.eclipse.jetty.server.Server">
+(... snip ...)
+  <Set name="sessionIdManager">
+    <New id="memcachedSessionIdManager" class="org.eclipse.jetty.nosql.memcached.MemcachedSessionIdManager">
+      <Arg><Ref id="Server" /></Arg>
+      <Set name="serverString">localhost:11211</Set>
+      <Set name="keyPrefix">session:</Set>
+    </New>
+  </Set>
+  <Call name="setAttribute">
+    <Arg>memcachedSessionIdManager</Arg>
+    <Arg><Ref id="memcachedSessionIdManager" /></Arg>
+  </Call>
+<!-- // equivalent in Java:
+  Server server = ...;
+  MemcachedSessionIdManager memcachedSessionIdManager = new MemcachedSessionIdManager(server);
+  memcachedSessionIdManager.setServerString("localhost:11211");
+  memcachedSessionIdManager.setKeyPrefix("session:");
+  server.setSessionIdManager(memcachedSessionIdManager);
+  server.setAttribute("memcachedSessionIdManager", memcachedSessionIdManager);
+  -->
+</Configure>
+```
 
 #### Extra options for "session ID manager"
 
@@ -82,72 +82,72 @@ SessionManagers can be configured by either `${APP_ROOT}/WEB-INF/jetty-web.xml` 
 
 Sample configuration for `${APP_ROOT}/WEB-INF/jetty-web.xml`:
 
-    <?xml version="1.0" encoding="UTF-8"?>
-    <Configure class="org.eclipse.jetty.webapp.WebAppContext">
-      
-      (... snip ...)
-      
-      <Get name="server">
-        <Get id="memcachedSessionIdManager" name="sessionIdManager" />
-      </Get>
-      <Set name="sessionHandler">
-        <New class="org.eclipse.jetty.server.session.SessionHandler">
-          <Arg>
-            <New class="org.eclipse.jetty.nosql.memcached.MemcachedSessionManager">
-              <Set name="sessionIdManager">
-                <Ref id="memcachedSessionIdManager" />
-              </Set>
-            </New>
-          </Arg>
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<Configure class="org.eclipse.jetty.webapp.WebAppContext">
+(... snip ...)
+  <Get name="server">
+    <Get id="memcachedSessionIdManager" name="sessionIdManager" />
+  </Get>
+  <Set name="sessionHandler">
+    <New class="org.eclipse.jetty.server.session.SessionHandler">
+      <Arg>
+        <New class="org.eclipse.jetty.nosql.memcached.MemcachedSessionManager">
+          <Set name="sessionIdManager">
+            <Ref id="memcachedSessionIdManager" />
+          </Set>
         </New>
-      </Set>
-    </Configure>
-    <!-- // equivalent in Java
-      WebAppContext context = ...
-      Server server = ...;
-      MemcachedSessionIdManager sessionIdManager = server.getAttribute("memcachedSessionIdManager");
-      MemcachedSessionManager sessionManager = new MemcachedSessionManager();
-      sessionManager.setSessionIdManager(sessionIdManager);
-      context.setSessionHandler(new SessionHandler(sessionManager));
-      -->
+      </Arg>
+    </New>
+  </Set>
+</Configure>
+<!-- // equivalent in Java
+  WebAppContext context = ...
+  Server server = ...;
+  MemcachedSessionIdManager sessionIdManager = server.getAttribute("memcachedSessionIdManager");
+  MemcachedSessionManager sessionManager = new MemcachedSessionManager();
+  sessionManager.setSessionIdManager(sessionIdManager);
+  context.setSessionHandler(new SessionHandler(sessionManager));
+  -->
+```
 
 Sample configuration for `${JETTY_HOME}/webapps/${APP_NAME}.xml`:
 
-    <?xml version="1.0"  encoding="ISO-8859-1"?>
-    <!DOCTYPE Configure PUBLIC "-//Mort Bay Consulting//DTD Configure//EN" "http://jetty.eclipse.org/configure.dtd">
-    <Configure class="org.eclipse.jetty.webapp.WebAppContext">
-      
-      (... snip ...)
-      
-      <Ref name="Server" id="Server">
-        <Call id="sessionIdManager" name="getAttribute">
-          <Arg>memcachedSessionIdManager</Arg>
-        </Call>
-      </Ref>
-      <Set name="sessionHandler">
-        <New class="org.eclipse.jetty.server.session.SessionHandler">
-          <Arg>
-            <New id="memcachedSessionManaegr" class="org.eclipse.jetty.nosql.memcached.MemcachedSessionManager">
-              <Set name="sessionIdManager">
-                <Ref id="memcachedSessionIdManager" />
-              </Set>
-              <Set name="sessionFactory">
-                <New class="org.eclipse.jetty.nosql.kvs.session.xstream.XStreamSessionFactory" />
-              </Set>
-            </New>
-          </Arg>
+```xml
+<?xml version="1.0"  encoding="ISO-8859-1"?>
+<!DOCTYPE Configure PUBLIC "-//Mort Bay Consulting//DTD Configure//EN" "http://jetty.eclipse.org/configure.dtd">
+<Configure class="org.eclipse.jetty.webapp.WebAppContext">
+(... snip ...)
+  <Ref name="Server" id="Server">
+    <Call id="sessionIdManager" name="getAttribute">
+      <Arg>memcachedSessionIdManager</Arg>
+    </Call>
+  </Ref>
+  <Set name="sessionHandler">
+    <New class="org.eclipse.jetty.server.session.SessionHandler">
+      <Arg>
+        <New id="memcachedSessionManaegr" class="org.eclipse.jetty.nosql.memcached.MemcachedSessionManager">
+          <Set name="sessionIdManager">
+            <Ref id="memcachedSessionIdManager" />
+          </Set>
+          <Set name="sessionFactory">
+            <New class="org.eclipse.jetty.nosql.kvs.session.xstream.XStreamSessionFactory" />
+          </Set>
         </New>
-      </Set>
-    </Configure>
-    <!-- // equivalent in Java
-      WebAppContext context = ...
-      Server server = ...;
-      MemcachedSessionIdManager sessionIdManager = server.getAttribute("memcachedSessionIdManager");
-      MemcachedSessionManager sessionManager = new MemcachedSessionManager();
-      sessionManager.setSessionIdManager(sessionIdManager);
-      sessionManager.setSessionFactory(new XStreamSessionFactory());
-      context.setSessionHandler(new SessionHandler(sessionManager));
-      -->
+      </Arg>
+    </New>
+  </Set>
+</Configure>
+<!-- // equivalent in Java
+  WebAppContext context = ...
+  Server server = ...;
+  MemcachedSessionIdManager sessionIdManager = server.getAttribute("memcachedSessionIdManager");
+  MemcachedSessionManager sessionManager = new MemcachedSessionManager();
+  sessionManager.setSessionIdManager(sessionIdManager);
+  sessionManager.setSessionFactory(new XStreamSessionFactory());
+  context.setSessionHandler(new SessionHandler(sessionManager));
+  -->
+```
 
 
 #### Extra options for "session manager"
@@ -177,16 +177,20 @@ All library dependencies can be resolved from Maven.
 
 You can build project tree from top of the repository.
 
-    $ git clone git://github.com/yyuu/jetty-nosql-memcached.git
-    $ cd jetty-nosql-memcached
-    $ mvn clean package
+```sh
+$ git clone git://github.com/yyuu/jetty-nosql-memcached.git
+$ cd jetty-nosql-memcached
+$ mvn clean package
+```
 
 ### Release
 
 Use maven-release-plguin.
 
-    $ mvn release:clean
-    $ mvn -Darguments="-Dgpg.passphrase=${GPG_PASSPHRASE}" release:prepare release:perform
+```sh
+$ mvn release:clean
+$ mvn -Darguments="-Dgpg.keyname=FB708C08 -Dgpg.passphrase=${GPG_PASSPHRASE}" release:prepare release:perform
+```
 
 
 ## License
