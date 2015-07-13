@@ -1,6 +1,8 @@
-2014-06-13 Marlon Bernardes <marlonjb.cb@gmail.com>
+2015-07-13 Yamashita Yuu <peek824545201@gmail.com>
   * Release: 0.4.1
-  * Updated XStream (1.4.4 -> 1.4.7)
+  * KeyValueStoreSessionManager triggers unnecessary session write on load (#16, #17)
+  * Updated XStream (1.4.4 -> 1.4.7) (#25)
+  * Update SpyMemcached (2.8.12 -> 2.12.0) (#28)
 
 2013-06-12 Yamashita Yuu <yamashita@geishatokyo.com>
   * Release: 0.4.0
