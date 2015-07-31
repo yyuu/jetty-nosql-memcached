@@ -15,7 +15,9 @@ public class XStreamTranscoder implements ISerializationTranscoder {
 
   public XStreamTranscoder(ClassLoader cl) {
     xstream = new XStream();
-    xstream.setClassLoader(cl);
+// FIXME: using SessionManager's `getContext().getClassLoader()` causes `com.thoughtworks.xstream.mapper.CannotResolveClassException`
+//        on deserializing `org.eclipse.jetty.nosql.kvs.session.xstream.XStreamSession`
+//  xstream.setClassLoader(cl);
     classLoader = cl;
   }
 
