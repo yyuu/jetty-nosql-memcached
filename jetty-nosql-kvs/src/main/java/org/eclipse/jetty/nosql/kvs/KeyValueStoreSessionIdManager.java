@@ -110,11 +110,9 @@ public abstract class KeyValueStoreSessionIdManager extends AbstractSessionIdMan
      */
     public boolean idInUse(final String idInCluster)
     {
-        byte[] dummy = idInCluster.getBytes(); // dummy string for reserving key
-        boolean exists = !addKey(idInCluster, dummy);
+        return getKey(idInCluster) != null; // note "null" may also mean be caused by connection problem. Anyway: Treating this as "not in use"
         // do not check the validity of the session since
         // we do not save invalidated sessions anymore.
-        return exists;
     }
 
     /* ------------------------------------------------------------ */
