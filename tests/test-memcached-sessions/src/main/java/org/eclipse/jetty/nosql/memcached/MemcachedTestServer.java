@@ -62,10 +62,13 @@ public class MemcachedTestServer extends AbstractTestServer
         _saveAllAttributes = saveAllAttributes;
     }
 
-    public SessionIdManager newSessionIdManager(String config)
+    public SessionIdManager newSessionIdManager(Object config)
     {
+        String configString;
         if (config == null) {
-            config = "127.0.0.1:11211";
+            configString = "127.0.0.1:11211";
+        } else {
+            configString = (String) config;
         }
         if ( _idManager != null )
         {
@@ -98,9 +101,9 @@ public class MemcachedTestServer extends AbstractTestServer
             System.err.println("MemcachedTestServer:SessionIdManager:" + _maxInactivePeriod + "/" + _scavengePeriod);
             AbstractMemcachedClientFactory clientFactory = getMemcachedClientFactory();
             if (clientFactory == null) {
-                _idManager = new MemcachedSessionIdManager(_server, config);
+                _idManager = new MemcachedSessionIdManager(_server, configString);
             } else {
-                _idManager = new MemcachedSessionIdManager(_server, config, clientFactory);
+                _idManager = new MemcachedSessionIdManager(_server, configString, clientFactory);
             }
             _idManager.setScavengePeriod((int)TimeUnit.SECONDS.toMillis(_scavengePeriod));
             _idManager.setKeyPrefix("MemcachedTestServer::");

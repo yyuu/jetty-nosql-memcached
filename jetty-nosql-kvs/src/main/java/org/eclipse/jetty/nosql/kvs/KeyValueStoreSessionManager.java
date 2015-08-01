@@ -82,8 +82,11 @@ public class KeyValueStoreSessionManager extends NoSqlSessionManager
         {
             // use context class loader during object deserialization.
             // thanks Daniel Peters!
-            sessionFactory.setClassLoader(getContext().getClassLoader());
-            log.info("use context class loader for session deserializer.");
+            ClassLoader cl = getContext().getClassLoader();
+            if (cl != null) {
+                sessionFactory.setClassLoader(cl);
+                log.info("use context class loader for session deserializer.");
+            }
             // FIXME: is there any safe way to refer context's class loader?
             // getContext().getClassLoader() may raise SecurityException.
             // this will be determine by policy configuration of JRE.
@@ -384,24 +387,6 @@ public class KeyValueStoreSessionManager extends NoSqlSessionManager
     protected boolean removeSession(final String idInCluster)
     {
         return deleteKey(idInCluster);
-    }
-
-    /*------------------------------------------------------------ */
-    @Override
-    protected void invalidateSessions() throws Exception
-    {
-        // do nothing.
-        // we do not want to invalidate all sessions on doStop().
-        log.debug("invalidateSessions: nothing to do.");
-    }
-
-    /*------------------------------------------------------------ */
-    @Override
-    protected void invalidateSession(final String idInCluster)
-    {
-        // do nothing.
-        // invalidated sessions will not save in KeyValueStoreSessionManager.save()
-        log.debug("invalidateSession: invalidating " + idInCluster);
     }
 
     protected String mangleKey(final String idInCluster)
