@@ -1,4 +1,11 @@
 language: java
 jdk:
   - oraclejdk8
+services:
+  - memcached
+script:
+  - mvn -Dorg.eclipse.jetty.nosql.memcached.clientFactory=spymemcached        test
+  - mvn -Dorg.eclipse.jetty.nosql.memcached.clientFactory=spymemcached-binary test
+  - mvn -Dorg.eclipse.jetty.nosql.memcached.clientFactory=xmemcached          test
+  - mvn -Dorg.eclipse.jetty.nosql.memcached.clientFactory=xmemcached-binary   test
 sudo: false
