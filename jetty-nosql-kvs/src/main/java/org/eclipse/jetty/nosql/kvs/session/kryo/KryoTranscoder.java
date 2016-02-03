@@ -11,16 +11,23 @@ import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
 public class KryoTranscoder implements ISerializationTranscoder {
-  private Kryo kryo = null;
+  
+  private ThreadLocal<Kryo> kryos = new ThreadLocal<Kryo>() {
+    @Override
+    protected Kryo initialValue() {
+        Kryo kryo = new Kryo();
+        kryo.setRegistrationRequired(false);
+        kryo.setClassLoader( Thread.currentThread().getContextClassLoader() );
+        return kryo;
+    };
+  };
 
   public KryoTranscoder() {
     this(Thread.currentThread().getContextClassLoader());
   }
 
   public KryoTranscoder(ClassLoader cl) {
-    kryo = new Kryo();
-    kryo.setRegistrationRequired(false);
-    kryo.setClassLoader(cl);
+    kryos.get().setClassLoader(cl);
   }
 
   public byte[] encode(Object obj) throws TranscoderException {
@@ -28,7 +35,7 @@ public class KryoTranscoder implements ISerializationTranscoder {
     try {
       ByteArrayOutputStream stream = new ByteArrayOutputStream();
       Output output = new Output(stream);
-      kryo.writeObject(output, obj);
+      kryos.get().writeObject(output, obj);
       output.close();
       raw = stream.toByteArray();
     } catch (Exception error) {
@@ -42,7 +49,7 @@ public class KryoTranscoder implements ISerializationTranscoder {
     try {
       ByteArrayInputStream stream = new ByteArrayInputStream(raw);
       Input input = new Input(stream);
-      obj = kryo.readObject(input, klass);
+      obj = kryos.get().readObject(input, klass);
     } catch (Exception error) {
       throw(new TranscoderException(error));
     }
