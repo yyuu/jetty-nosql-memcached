@@ -312,6 +312,7 @@ public abstract class KeyValueStoreSessionIdManager extends AbstractSessionIdMan
 
     /**
      * @deprecated from 0.3.0. this is false by default and is not an option.
+     * @param sticky boolean
      */
     @Deprecated
     public void setSticky(final boolean sticky)
@@ -321,6 +322,7 @@ public abstract class KeyValueStoreSessionIdManager extends AbstractSessionIdMan
 
     /**
      * @deprecated from 0.3.0. this is false by default and is not an option.
+     * @return boolean
      */
     @Deprecated
     public boolean isSticky()

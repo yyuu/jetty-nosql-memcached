@@ -443,6 +443,7 @@ public class KeyValueStoreSessionManager extends NoSqlSessionManager
     /**
      * @deprecated from 0.3.1. use #{@link org.eclipse.jetty.nosql.kvs.KeyValueStoreSessionManager#getSessionFactory()}
      *             instead.
+     * @return AbstractSessionFactory
      */
     @Deprecated
     public AbstractSessionFactory getSessionFacade()
@@ -454,6 +455,7 @@ public class KeyValueStoreSessionManager extends NoSqlSessionManager
      * @deprecated from 0.3.1. use #
      *             {@link KeyValueStoreSessionManager#setSessionFactory(org.eclipse.jetty.nosql.kvs.session.AbstractSessionFactory)}
      *             instead.
+     * @param sf AbstractSessionFactory
      */
     @Deprecated
     public void setSessionFacade(final AbstractSessionFactory sf)
@@ -474,6 +476,7 @@ public class KeyValueStoreSessionManager extends NoSqlSessionManager
 
     /**
      * @deprecated from 0.3.0. this is false by default and is not an option.
+     * @param sticky boolean
      */
     @Deprecated
     public void setSticky(final boolean sticky)
@@ -483,6 +486,7 @@ public class KeyValueStoreSessionManager extends NoSqlSessionManager
 
     /**
      * @deprecated from 0.3.0. this is false by default and is not an option.
+     * @return boolean
      */
     @Deprecated
     public boolean isSticky()

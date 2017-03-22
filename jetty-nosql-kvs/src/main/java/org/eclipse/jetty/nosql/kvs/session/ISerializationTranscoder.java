@@ -21,7 +21,7 @@ public interface ISerializationTranscoder {
 	 * serialize an object to byte array
 	 * @param obj to serialize
 	 * @return serialized data
-	 * @throws Exception
+	 * @throws TranscoderException encode error
 	 */
 	public byte[] encode(Object obj) throws TranscoderException;
 
@@ -30,7 +30,7 @@ public interface ISerializationTranscoder {
 	 * @param raw data
 	 * @param klass of serialized data
 	 * @return deserialized object(s)
-	 * @throws Exception
+	 * @throws TranscoderException decode error
 	 */
 	public <T> T decode(byte[] raw, Class<T> klass) throws TranscoderException;
 }

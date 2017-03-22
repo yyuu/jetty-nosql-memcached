@@ -47,7 +47,7 @@ public interface ISerializableSession {
 
 	/**
 	 * 
-	 * @param attributes
+	 * @param attributes attributes map
 	 */
 	public void setAttributeMap(Map<String, Object> attributes);
 
@@ -103,7 +103,7 @@ public interface ISerializableSession {
 
 	/**
 	 * 
-	 * @param version
+	 * @param version version
 	 */
 	public void setVersion(long version);
 
