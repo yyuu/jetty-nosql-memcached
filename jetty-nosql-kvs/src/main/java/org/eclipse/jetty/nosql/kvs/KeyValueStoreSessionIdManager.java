@@ -26,7 +26,7 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.SessionManager;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.session.AbstractSessionIdManager;
-import org.eclipse.jetty.server.session.SessionHandler;
+import org.eclipse.jetty.server.session.KeyValueStoreSessionHandler;
 import org.eclipse.jetty.util.log.Log;
 import org.eclipse.jetty.util.log.Logger;
 
@@ -108,7 +108,8 @@ public abstract class KeyValueStoreSessionIdManager extends AbstractSessionIdMan
     /**
      * is the session id known to memcached, and is it valid
      */
-    public boolean idInUse(final String idInCluster)
+    @Override
+    public boolean isIdInUse(final String idInCluster)
     {
         return getKey(idInCluster) != null; // note "null" may also mean be caused by connection problem. Anyway: Treating this as "not in use"
         // do not check the validity of the session since
@@ -140,7 +141,7 @@ public abstract class KeyValueStoreSessionIdManager extends AbstractSessionIdMan
         Handler[] contexts = _server.getChildHandlersByClass(ContextHandler.class);
         for (int i = 0; contexts != null && i < contexts.length; i++)
         {
-            SessionHandler sessionHandler = ((ContextHandler) contexts[i]).getChildHandlerByClass(SessionHandler.class);
+            KeyValueStoreSessionHandler sessionHandler = ((ContextHandler) contexts[i]).getChildHandlerByClass(KeyValueStoreSessionHandler.class);
             if (sessionHandler != null)
             {
                 SessionManager manager = sessionHandler.getSessionManager();
@@ -331,7 +332,7 @@ public abstract class KeyValueStoreSessionIdManager extends AbstractSessionIdMan
     }
 
     @Override
-    public void renewSessionId(final String oldClusterId, final String oldNodeId, final HttpServletRequest request)
+    public String renewSessionId(final String oldClusterId, final String oldNodeId, final HttpServletRequest request)
     {
         //generate a new id
         String newClusterId = newSessionId(request.hashCode());
@@ -340,7 +341,7 @@ public abstract class KeyValueStoreSessionIdManager extends AbstractSessionIdMan
         Handler[] contexts = _server.getChildHandlersByClass(ContextHandler.class);
         for (int i = 0; contexts != null && i < contexts.length; i++)
         {
-            SessionHandler sessionHandler = ((ContextHandler) contexts[i]).getChildHandlerByClass(SessionHandler.class);
+            KeyValueStoreSessionHandler sessionHandler = ((ContextHandler) contexts[i]).getChildHandlerByClass(KeyValueStoreSessionHandler.class);
             if (sessionHandler != null)
             {
                 SessionManager manager = sessionHandler.getSessionManager();
@@ -352,5 +353,6 @@ public abstract class KeyValueStoreSessionIdManager extends AbstractSessionIdMan
                 }
             }
         }
+        return newClusterId;
     }
 }
