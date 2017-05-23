@@ -1,9 +1,10 @@
 package org.eclipse.jetty.nosql.kvs.session.serializable;
 
+import org.eclipse.jetty.nosql.kvs.session.AbstractSerializableSession;
 import org.eclipse.jetty.nosql.kvs.session.AbstractSessionFactory;
-import org.eclipse.jetty.nosql.kvs.session.ISerializableSession;
 import org.eclipse.jetty.nosql.kvs.session.ISerializationTranscoder;
 import org.eclipse.jetty.nosql.kvs.session.TranscoderException;
+import org.eclipse.jetty.server.session.SessionData;
 
 public class SerializableSessionFactory extends AbstractSessionFactory {
 	public SerializableSessionFactory() {
@@ -14,12 +15,13 @@ public class SerializableSessionFactory extends AbstractSessionFactory {
 		super(new SerializableTranscoder(cl));
 	}
 
-	public ISerializableSession create() {
-		return new SerializableSession();
+	@Override
+	public AbstractSerializableSession create(String id, String cpath, String vhost, long created, long accessed, long lastAccessed, long maxInactiveMs) {
+		return new SerializableSession(id, cpath, vhost, created, accessed, lastAccessed, maxInactiveMs);
 	}
 
 	@Override
-	public byte[] pack(ISerializableSession session, ISerializationTranscoder tc) throws TranscoderException {
+	public byte[] pack(SessionData session, ISerializationTranscoder tc) throws TranscoderException {
 		byte[] raw = null;
 		try {
 			raw = tc.encode(session);
@@ -30,8 +32,8 @@ public class SerializableSessionFactory extends AbstractSessionFactory {
 	}
 
 	@Override
-	public ISerializableSession unpack(byte[] raw, ISerializationTranscoder tc) {
-		ISerializableSession session = null;
+	public SessionData unpack(byte[] raw, ISerializationTranscoder tc) {
+		SessionData session = null;
 		try {
 			session = tc.decode(raw, SerializableSession.class);
 		} catch (Exception error) {

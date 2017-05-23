@@ -14,9 +14,8 @@ package org.eclipse.jetty.nosql.memcached;
 // You may elect to redistribute this code under either of these licenses. 
 // ========================================================================
 
+import org.eclipse.jetty.nosql.kvs.session.AbstractSessionFactory;
 import org.eclipse.jetty.nosql.kvs.session.xstream.XStreamSessionFactory;
-import org.eclipse.jetty.nosql.memcached.MemcachedSessionManager;
-import org.eclipse.jetty.server.SessionManager;
 
 /**
  * @version $Revision$ $Date$
@@ -32,31 +31,15 @@ public class XStreamMemcachedTestServer extends MemcachedTestServer
     {
         super(port, maxInactivePeriod, scavengePeriod);
     }
-    
-    
+
     public XStreamMemcachedTestServer(int port, int maxInactivePeriod, int scavengePeriod, boolean saveAllAttributes)
     {
         super(port, maxInactivePeriod, scavengePeriod, saveAllAttributes);
     }
 
     @Override
-    public SessionManager newSessionManager()
-    {
-        MemcachedSessionManager manager;
-        try
-        {
-            manager = new MemcachedSessionManager();
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException(e);
-        }
-        
-        manager.setSavePeriod(1);
-        manager.setStalePeriod(0);
-        manager.setSaveAllAttributes(_saveAllAttributes);
-        manager.setSessionFactory(new XStreamSessionFactory());
-        //manager.setScavengePeriod((int)TimeUnit.SECONDS.toMillis(_scavengePeriod));
-        return manager;
+    public AbstractSessionFactory newSessionFactory() {
+        return new XStreamSessionFactory();
     }
+
 }

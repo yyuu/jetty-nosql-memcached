@@ -1,15 +1,18 @@
 package org.eclipse.jetty.nosql.kvs.session.serializable;
 
-import java.io.Serializable;
-
 import org.eclipse.jetty.nosql.kvs.session.AbstractSerializableSession;
 
+import java.util.Map;
 
-public class SerializableSession extends AbstractSerializableSession implements Serializable {
-	private static final long serialVersionUID = 8406865621253286071L;
+public class SerializableSession extends AbstractSerializableSession {
+    private static final long serialVersionUID = 8840014279617118388L;
 
-	public SerializableSession() {
-		setCreationTime(System.currentTimeMillis());
-		setAccessed(getCreationTime());
-	}
+    public SerializableSession(String id, String cpath, String vhost, long created, long accessed, long lastAccessed, long maxInactiveMs) {
+        super(id, cpath, vhost, created, accessed, lastAccessed, maxInactiveMs);
+    }
+
+    public SerializableSession(String id, String cpath, String vhost, long created, long accessed, long lastAccessed, long maxInactiveMs, Map<String, Object> attributes) {
+        super(id, cpath, vhost, created, accessed, lastAccessed, maxInactiveMs, attributes);
+    }
+
 }

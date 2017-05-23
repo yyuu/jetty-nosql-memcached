@@ -1,22 +1,22 @@
 package org.eclipse.jetty.nosql.kvs.session;
 
-import java.io.Serializable;
+import org.eclipse.jetty.server.session.SessionData;
+
 import java.util.Collections;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.Map;
 
 
-public abstract class AbstractSerializableSession implements ISerializableSession, Serializable {
-	private static final long serialVersionUID = -8960779543485104697L;
-	public String _id = "";
-	public long _created = -1;
-	public long _accessed = -1;
-	public long _invalidated = -1;
+public abstract class AbstractSerializableSession extends SessionData {
+    private static final long serialVersionUID = -503405419124071511L;
 	public long _version = 0;
-	public Map<String, Object> _attributes = new HashMap<String, Object>();
-	public String _domain = "*";
-	public String _path = "*";
+
+	public AbstractSerializableSession(String id, String cpath, String vhost, long created, long accessed, long lastAccessed, long maxInactiveMs) {
+		super(id, cpath, vhost, created, accessed, lastAccessed, maxInactiveMs);
+	}
+	public AbstractSerializableSession(String id, String cpath, String vhost, long created, long accessed, long lastAccessed, long maxInactiveMs, Map<String, Object> attributes) {
+		super(id, cpath, vhost, created, accessed, lastAccessed, maxInactiveMs, attributes);
+	}
 
 	public String getId() {
 		return _id;
@@ -24,14 +24,6 @@ public abstract class AbstractSerializableSession implements ISerializableSessio
 
 	public void setId(String id) {
 		this._id = id;
-	}
-
-	public long getCreationTime() {
-		return _created;
-	}
-
-	public void setCreationTime(long created) {
-		this._created = created;
 	}
 
 	public long getAccessed() {
@@ -54,10 +46,6 @@ public abstract class AbstractSerializableSession implements ISerializableSessio
 		return _attributes.get(key);
 	}
 
-	public synchronized void setAttribute(String key, Object obj) {
-		_attributes.put(key, obj);
-	}
-
 	public synchronized void removeAttribute(String key) {
 		_attributes.remove(key);
 	}
@@ -69,27 +57,10 @@ public abstract class AbstractSerializableSession implements ISerializableSessio
 	@Override
 	public String toString() {
 		return "{id:" + getId() +
-				", created:" + getCreationTime() +
+				", created:" + getCreated() +
 				", accessed:" + getAccessed() +
 				", attributes:" + getAttributeMap() +
-				", invalidated:" + getInvalidated() +
 		"}";
-	}
-
-	public boolean isValid() {
-		return _invalidated < 0;
-	}
-
-	public void setValid(boolean valid) {
-		if (valid) {
-			this._invalidated = -1L;
-		} else {
-			this._invalidated = System.currentTimeMillis();
-		}
-	}
-
-	public long getInvalidated() {
-		return _invalidated;
 	}
 
 	public long getVersion() {
@@ -100,28 +71,11 @@ public abstract class AbstractSerializableSession implements ISerializableSessio
 		this._version = version;
 	}
 
-	public String getDomain() {
-		return _domain;
-	}
-
-	public void setDomain(String domain) {
-		this._domain = domain;
-	}
-
-	public String getPath() {
-		return _path;
-	}
-
-	public void setPath(String path) {
-		this._path = path;
-	}
-
-	public boolean equals(ISerializableSession other) {
+	public boolean equals(AbstractSerializableSession other) {
 		System.out.println("this=" + this + ", other=" + other);
 		boolean result = other != null;
-		result = result && this.getCreationTime() == other.getCreationTime();
+		result = result && this.getCreated() == other.getCreated();
 		result = result && this.getAccessed() == other.getAccessed();
-		result = result && this.getInvalidated() == other.getInvalidated();
 		result = result && this.getVersion() == other.getVersion();
 		if (result) {
 			if (this.getId() == null) {
@@ -131,24 +85,24 @@ public abstract class AbstractSerializableSession implements ISerializableSessio
 			}
 		}
 		if (result) {
-			if (this.getDomain() == null) {
-				result = result && other.getDomain() == null;
+			if (this.getVhost() == null) {
+				result = result && other.getVhost() == null;
 			} else {
-				result = result && this.getDomain().equals(other.getDomain());
+				result = result && this.getVhost().equals(other.getVhost());
 			}
 		}
 		if (result) {
-			if (this.getPath() == null) {
-				result = result && other.getPath() == null;
+			if (this.getContextPath() == null) {
+				result = result && other.getContextPath() == null;
 			} else {
-				result = result && this.getPath().equals(other.getPath());
+				result = result && this.getContextPath().equals(other.getContextPath());
 			}
 		}
 		if (result) {
 			if (this.getAttributeMap() == null) {
-				result = result && other.getAttributeMap() == null;
+				result = result && other.getAllAttributes() == null;
 			} else {
-				result = result && this.getAttributeMap().equals(other.getAttributeMap());
+				result = result && this.getAttributeMap().equals(other.getAllAttributes());
 			}
 		}
 		return result;
