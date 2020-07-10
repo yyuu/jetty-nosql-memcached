@@ -45,6 +45,7 @@ public class SerializableTranscoder implements ISerializationTranscoder {
 			ByteArrayInputStream bais = new ByteArrayInputStream(raw);
 			ObjectInputStream ois = new ClassLoadingObjectInputStream(bais, classLoader);
 			obj = ois.readObject();
+			ois.close();
 		} catch (Exception error) {
 			throw(new TranscoderException(error));
 		}

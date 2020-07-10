@@ -15,13 +15,8 @@ package org.eclipse.jetty.nosql.memcached;
 // ========================================================================
 
 
-
-import java.util.concurrent.TimeUnit;
-
-import org.eclipse.jetty.nosql.kvs.KeyValueStoreSessionIdManager;
-import org.eclipse.jetty.nosql.memcached.AbstractMemcachedClientFactory;
-import org.eclipse.jetty.nosql.memcached.MemcachedSessionIdManager;
-import org.eclipse.jetty.nosql.memcached.MemcachedSessionManager;
+import org.eclipse.jetty.nosql.kvs.session.AbstractSessionFactory;
+import org.eclipse.jetty.nosql.kvs.session.serializable.SerializableSessionFactory;
 import org.eclipse.jetty.nosql.memcached.hashmap.HashMapClientFactory;
 import org.eclipse.jetty.nosql.memcached.spymemcached.BinarySpyMemcachedClientFactory;
 import org.eclipse.jetty.nosql.memcached.spymemcached.HerokuSpyMemcachedClientFactory;
@@ -29,9 +24,7 @@ import org.eclipse.jetty.nosql.memcached.spymemcached.SpyMemcachedClientFactory;
 import org.eclipse.jetty.nosql.memcached.xmemcached.BinaryXMemcachedClientFactory;
 import org.eclipse.jetty.nosql.memcached.xmemcached.XMemcachedClientFactory;
 import org.eclipse.jetty.server.SessionIdManager;
-import org.eclipse.jetty.server.SessionManager;
-import org.eclipse.jetty.server.session.AbstractTestServer;
-import org.eclipse.jetty.server.session.SessionHandler;
+import org.eclipse.jetty.server.session.*;
 
 
 /**
@@ -39,7 +32,8 @@ import org.eclipse.jetty.server.session.SessionHandler;
  */
 public class MemcachedTestServer extends AbstractTestServer
 {
-    protected KeyValueStoreSessionIdManager _idManager;
+    protected DefaultSessionIdManager _idManager;
+    protected AbstractSessionFactory _sessionFactory;
     protected boolean _saveAllAttributes = false; // false save dirty, true save all
     
     public MemcachedTestServer(int port)
@@ -81,7 +75,6 @@ public class MemcachedTestServer extends AbstractTestServer
                 e.printStackTrace();
             }
             
-            _idManager.setScavengePeriod((int) TimeUnit.SECONDS.toMillis(_scavengePeriod));
             _idManager.setWorkerName("node0");
             
             try
@@ -99,19 +92,14 @@ public class MemcachedTestServer extends AbstractTestServer
         try
         {
             System.err.println("MemcachedTestServer:SessionIdManager:" + _maxInactivePeriod + "/" + _scavengePeriod);
-            AbstractMemcachedClientFactory clientFactory = getMemcachedClientFactory();
-            if (clientFactory == null) {
-                _idManager = new MemcachedSessionIdManager(_server, configString);
-            } else {
-                _idManager = new MemcachedSessionIdManager(_server, configString, clientFactory);
-            }
-            _idManager.setScavengePeriod((int)TimeUnit.SECONDS.toMillis(_scavengePeriod));
-            _idManager.setKeyPrefix("MemcachedTestServer::");
-            _idManager.setKeySuffix("::MemcachedTestServer");
+            _idManager = new DefaultSessionIdManager(_server);
+//            _idManager.setKeyPrefix("MemcachedTestServer::");
+//            _idManager.setKeySuffix("::MemcachedTestServer");
             // to avoid stupid bugs of instance initialization...
-            _idManager.setDefaultExpiry(_idManager.getDefaultExpiry());
-            _idManager.setServerString(_idManager.getServerString());
-            _idManager.setTimeoutInMs(_idManager.getTimeoutInMs());
+//            _idManager.setDefaultExpiry(_idManager.getDefaultExpiry());
+//            _idManager.setServerString(_idManager.getServerString());
+//            _idManager.setTimeoutInMs(_idManager.getTimeoutInMs());
+            _idManager.setWorkerName("node0");
 
             return _idManager;
         }
@@ -121,28 +109,36 @@ public class MemcachedTestServer extends AbstractTestServer
         }
     }
 
-    public SessionManager newSessionManager()
-    {
-        MemcachedSessionManager manager;
-        try
-        {
-            manager = new MemcachedSessionManager();
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException(e);
-        }
-        
-        manager.setSavePeriod(1);
-        manager.setStalePeriod(0);
-        manager.setSaveAllAttributes(_saveAllAttributes);
-        //manager.setScavengePeriod((int)TimeUnit.SECONDS.toMillis(_scavengePeriod));
-        return manager;
+    public AbstractSessionFactory newSessionFactory() {
+        return new SerializableSessionFactory();
     }
 
-    public SessionHandler newSessionHandler(SessionManager sessionManager)
-    {
-        return new SessionHandler(sessionManager);
+    public SessionHandler newSessionHandler() throws Exception {
+        SessionHandler handler = new SessionHandler();
+        SessionCache sc = getSessionCache(handler);
+        sc.setSessionDataStore(getDataStore(handler));
+        handler.setSessionCache(sc);
+        return handler;
+    }
+
+
+     protected SessionCache getSessionCache(SessionHandler handler) {
+        DefaultSessionCacheFactory cacheFactory = new DefaultSessionCacheFactory();
+        cacheFactory.setEvictionPolicy(SessionCache.NEVER_EVICT);
+        return cacheFactory.getSessionCache(handler);
+    }
+
+    private MemcachedSessionDataStore getDataStore(SessionHandler handler) throws Exception {
+        AbstractMemcachedClientFactory clientFactory = getMemcachedClientFactory();
+        String configString = "127.0.0.1:11211";
+        MemcachedSessionDataStoreFactory factory = new MemcachedSessionDataStoreFactory();
+        factory.setSessionFactory(newSessionFactory());
+        factory.setClientFactory(clientFactory);
+        factory.setServerString(configString);
+        factory.setGracePeriodSec(_scavengePeriod);
+        factory.setDefaultExpiry(_scavengePeriod);
+        factory.setTimeoutInMs(1000);
+        return (MemcachedSessionDataStore) factory.getSessionDataStore(handler);
     }
     
     public static void main(String... args) throws Exception

@@ -50,6 +50,7 @@ public class KryoTranscoder implements ISerializationTranscoder {
       ByteArrayInputStream stream = new ByteArrayInputStream(raw);
       Input input = new Input(stream);
       obj = kryos.get().readObject(input, klass);
+      input.close();
     } catch (Exception error) {
       throw(new TranscoderException(error));
     }

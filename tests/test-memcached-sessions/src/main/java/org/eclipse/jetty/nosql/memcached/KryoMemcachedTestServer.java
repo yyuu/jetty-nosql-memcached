@@ -14,9 +14,8 @@ package org.eclipse.jetty.nosql.memcached;
 // You may elect to redistribute this code under either of these licenses. 
 // ========================================================================
 
+import org.eclipse.jetty.nosql.kvs.session.AbstractSessionFactory;
 import org.eclipse.jetty.nosql.kvs.session.kryo.KryoSessionFactory;
-import org.eclipse.jetty.nosql.memcached.MemcachedSessionManager;
-import org.eclipse.jetty.server.SessionManager;
 
 /**
  * @version $Revision$ $Date$
@@ -40,23 +39,8 @@ public class KryoMemcachedTestServer extends MemcachedTestServer
     }
 
     @Override
-    public SessionManager newSessionManager()
-    {
-        MemcachedSessionManager manager;
-        try
-        {
-            manager = new MemcachedSessionManager();
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException(e);
-        }
-        
-        manager.setSavePeriod(1);
-        manager.setStalePeriod(0);
-        manager.setSaveAllAttributes(_saveAllAttributes);
-        manager.setSessionFactory(new KryoSessionFactory());
-        //manager.setScavengePeriod((int)TimeUnit.SECONDS.toMillis(_scavengePeriod));
-        return manager;
+    public AbstractSessionFactory newSessionFactory() {
+        return new KryoSessionFactory();
     }
+
 }
