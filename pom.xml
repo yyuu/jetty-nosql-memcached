@@ -10,7 +10,7 @@
   <properties>
     <jetty.version>9.3.16.v20170120</jetty.version>
     <slf4j.version>1.7.12</slf4j.version>
-    <junit.version>4.12</junit.version>
+    <junit.version>4.13.1</junit.version>
   </properties>
   <profiles>
     <profile>
