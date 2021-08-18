@@ -9,3 +9,7 @@ script:
   - mvn -Dorg.eclipse.jetty.nosql.memcached.clientFactory=xmemcached          test
   - mvn -Dorg.eclipse.jetty.nosql.memcached.clientFactory=xmemcached-binary   test
 sudo: false
+
+cache:
+  directories:
+  - $HOME/.m2
