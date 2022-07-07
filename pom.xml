@@ -8,7 +8,7 @@
   <url>https://github.com/yyuu/jetty-nosql-memcached</url>
   <packaging>pom</packaging>
   <properties>
-    <jetty.version>9.3.16.v20170120</jetty.version>
+    <jetty.version>10.0.10</jetty.version>
     <slf4j.version>1.7.12</slf4j.version>
     <junit.version>4.12</junit.version>
   </properties>
